@@ -1,0 +1,133 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Montserrat', sans-serif;
+  }
+}
+
+* {
+    scroll-behavior: smooth;
+}
+
+@layer utilities {
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-thumb-hover);
+  }
+
+  :root {
+    --scrollbar-track: #f1f5f9;
+    --scrollbar-thumb: #cbd5e1;
+    --scrollbar-thumb-hover: #94a3b8;
+  }
+
+  .dark {
+    --scrollbar-track: #1e293b;
+    --scrollbar-thumb: #334155;
+    --scrollbar-thumb-hover: #475569;
+  }
+}
+
+/* Transitions */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Focus styles */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-light-primary-500 dark:focus:ring-dark-primary-500 dark:focus:ring-offset-neutral-900;
+}
+
+/* Form elements */
+.form-input {
+  @apply block w-full px-3 py-2 border border-light-neutral-200 dark:border-dark-neutral-700 rounded-lg bg-white dark:bg-dark-neutral-700 text-light-text-primary dark:text-dark-text-primary focus:ring-2 focus:ring-light-primary-500 dark:focus:ring-dark-primary-500 focus:border-light-primary-500 dark:focus:border-dark-primary-500 transition-colors duration-200;
+}
+
+.form-select {
+  @apply block w-full pl-3 pr-10 py-2 text-sm border border-light-neutral-200 dark:border-dark-neutral-700 rounded-lg bg-white dark:bg-dark-neutral-700 text-light-text-primary dark:text-dark-text-primary focus:ring-2 focus:ring-light-primary-500 dark:focus:ring-dark-primary-500 focus:border-light-primary-500 dark:focus:border-dark-primary-500 transition-colors duration-200;
+}
+
+.form-checkbox {
+  @apply h-4 w-4 text-light-primary-600 dark:text-dark-primary-600 border-light-neutral-300 dark:border-dark-neutral-700 rounded focus:ring-light-primary-500 dark:focus:ring-dark-primary-500;
+}
+
+.form-radio {
+  @apply h-4 w-4 text-light-primary-600 dark:text-dark-primary-600 border-light-neutral-300 dark:border-dark-neutral-700 focus:ring-light-primary-500 dark:focus:ring-dark-primary-500;
+}
+
+/* Buttons */
+.btn-primary {
+  @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-light-primary-600 hover:bg-light-primary-700 dark:bg-dark-primary-600 dark:hover:bg-dark-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-light-primary-500 dark:focus:ring-dark-primary-500 dark:focus:ring-offset-neutral-900 transition-all duration-200;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center px-4 py-2 border border-light-neutral-200 dark:border-dark-neutral-700 text-sm font-medium rounded-lg text-light-text-primary dark:text-dark-text-primary hover:bg-light-neutral-50 dark:hover:bg-dark-neutral-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-light-primary-500 dark:focus:ring-dark-primary-500 dark:focus:ring-offset-neutral-900 transition-colors duration-200;
+}
+
+/* Cards */
+.card {
+  @apply bg-white dark:bg-dark-neutral-800 rounded-lg shadow-sm overflow-hidden;
+}
+
+.card-hover {
+  @apply transform transition-all duration-300 hover:shadow-md hover:scale-[1.02];
+}
+
+/* Typography */
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-light-primary-500 to-light-primary-700 dark:from-dark-primary-400 dark:to-dark-primary-600;
+}

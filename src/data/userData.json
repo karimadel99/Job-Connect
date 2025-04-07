@@ -1,0 +1,22 @@
+[
+  {
+    "id": 101,
+    "name": "Ronald Richards",
+    "title":"ui/ux developer",
+    "biography": "I've been passionate about graphic design and digital art from an early age...",
+    "coverLetter": "Dear Sir, I am writing to express my interest in the fourth grade instructional position...",
+    "dateOfBirth": "14 June, 2021",
+    "nationality": "Bangladesh",
+    "maritalStatus": "Single",
+    "gender": "Male",
+    "experience": "7 Years",
+    "education": "Master Degree",
+    "contact": {
+      "website": "www.estherhoward.com",
+      "location": "Beverly Hills, California 90202",
+      "phone": "+1-202-555-0141",
+      "email": "esther.howard@gmail.com"
+    }
+  }
+
+] 

@@ -1,0 +1,417 @@
+[
+  {
+    "id": 1,
+    "title": "UI/UX Designer",
+    "status": "Active",
+    "applications": 780,
+    "jobType": "Full Time",
+    "daysRemaining": 27,
+    "postedDate": "3 days ago",
+    "candidates": [
+      {
+        "id": 101,
+        "candidateName": "Ronald Richards",
+        "experience": "7 Years Experience",
+        "appliedDate": "November 22, 2022",
+        "shortlisted": false
+      },
+      {
+        "id": 102,
+        "candidateName": "Theresa Webb",
+        "experience": "5 Years Experience",
+        "appliedDate": "November 23, 2022",
+        "shortlisted": false
+      },
+      {
+        "id": 103,
+        "candidateName": "Devin Lane",
+        "experience": "4 Years Experience",
+        "appliedDate": "November 24, 2022",
+        "shortlisted": true
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "title": "Senior UX Designer",
+    "status": "Active",
+    "applications": 22,
+    "jobType": "Part Time",
+    "daysRemaining": 15,
+    "postedDate": "5 days ago",
+    "candidates": [
+      {
+        "id": 201,
+        "candidateName": "Darrell Steward",
+        "experience": "8 Years Experience",
+        "appliedDate": "November 20, 2022",
+        "shortlisted": true
+      },
+      {
+        "id": 202,
+        "candidateName": "Jenny Wilson",
+        "experience": "6 Years Experience",
+        "appliedDate": "November 22, 2022",
+        "shortlisted": false
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "title": "Technical Support Specialist",
+    "status": "Active",
+    "applications": 18,
+    "jobType": "Full Time",
+    "daysRemaining": 10,
+    "postedDate": "1 week ago",
+    "candidates": [
+      {
+        "id": 301,
+        "candidateName": "Cameron Williamson",
+        "experience": "3 Years Experience",
+        "appliedDate": "November 10, 2022",
+        "shortlisted": false
+      },
+      {
+        "id": 302,
+        "candidateName": "Jerome Bell",
+        "experience": "5 Years Experience",
+        "appliedDate": "November 12, 2022",
+        "shortlisted": false
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "title": "Junior Graphic Designer",
+    "status": "Expired",
+    "applications": 0,
+    "jobType": "Internship",
+    "daysRemaining": 0,
+    "postedDate": "1 month ago",
+    "candidates": [
+      {
+        "id": 401,
+        "candidateName": "Kathryn Murphy",
+        "experience": "1 Year Experience",
+        "appliedDate": "October 18, 2022",
+        "shortlisted": false
+      },
+      {
+        "id": 402,
+        "candidateName": "Jacob Jones",
+        "experience": "2 Years Experience",
+        "appliedDate": "October 19, 2022",
+        "shortlisted": false
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "title": "Project Manager",
+    "status": "Expired",
+    "applications": 14,
+    "jobType": "Contract",
+    "daysRemaining": 0,
+    "postedDate": "2 weeks ago",
+    "candidates": [
+      {
+        "id": 501,
+        "candidateName": "Kristin Watson",
+        "experience": "7 Years Experience",
+        "appliedDate": "November 1, 2022",
+        "shortlisted": false
+      },
+      {
+        "id": 502,
+        "candidateName": "Marvin McKinney",
+        "experience": "5 Years Experience",
+        "appliedDate": "November 3, 2022",
+        "shortlisted": true
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "title": "Frontend Developer",
+    "status": "Active",
+    "applications": 62,
+    "jobType": "Full Time",
+    "daysRemaining": 7,
+    "postedDate": "2 days ago",
+    "candidates": [
+      {
+        "id": 601,
+        "candidateName": "Eleanor Pena",
+        "experience": "4 Years Experience",
+        "appliedDate": "November 25, 2022",
+        "shortlisted": false
+      },
+      {
+        "id": 602,
+        "candidateName": "Wade Warren",
+        "experience": "6 Years Experience",
+        "appliedDate": "November 26, 2022",
+        "shortlisted": false
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "title": "Backend Engineer",
+    "status": "Active",
+    "applications": 44,
+    "jobType": "Full Time",
+    "daysRemaining": 14,
+    "postedDate": "4 days ago",
+    "candidates": [
+      {
+        "id": 701,
+        "candidateName": "Leslie Alexander",
+        "experience": "5 Years Experience",
+        "appliedDate": "November 19, 2022",
+        "shortlisted": true
+      },
+      {
+        "id": 702,
+        "candidateName": "Courtney Henry",
+        "experience": "2 Years Experience",
+        "appliedDate": "November 21, 2022",
+        "shortlisted": false
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "title": "Marketing Specialist",
+    "status": "Expired",
+    "applications": 12,
+    "jobType": "Part Time",
+    "daysRemaining": 0,
+    "postedDate": "3 weeks ago",
+    "candidates": [
+      {
+        "id": 801,
+        "candidateName": "Ralph Edwards",
+        "experience": "4 Years Experience",
+        "appliedDate": "November 2, 2022",
+        "shortlisted": false
+      },
+      {
+        "id": 802,
+        "candidateName": "Annette Black",
+        "experience": "3 Years Experience",
+        "appliedDate": "November 5, 2022",
+        "shortlisted": false
+      }
+    ]
+  },
+  {
+    "id": 1,
+    "title": "UI/UX Designer",
+    "status": "Active",
+    "applications": 780,
+    "jobType": "Full Time",
+    "daysRemaining": 27,
+    "postedDate": "3 days ago",
+    "candidates": [
+      {
+        "id": 101,
+        "candidateName": "Ronald Richards",
+        "experience": "7 Years Experience",
+        "appliedDate": "November 22, 2022",
+        "shortlisted": false
+      },
+      {
+        "id": 102,
+        "candidateName": "Theresa Webb",
+        "experience": "5 Years Experience",
+        "appliedDate": "November 23, 2022",
+        "shortlisted": false
+      },
+      {
+        "id": 103,
+        "candidateName": "Devin Lane",
+        "experience": "4 Years Experience",
+        "appliedDate": "November 24, 2022",
+        "shortlisted": true
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "title": "Senior UX Designer",
+    "status": "Active",
+    "applications": 22,
+    "jobType": "Part Time",
+    "daysRemaining": 15,
+    "postedDate": "5 days ago",
+    "candidates": [
+      {
+        "id": 201,
+        "candidateName": "Darrell Steward",
+        "experience": "8 Years Experience",
+        "appliedDate": "November 20, 2022",
+        "shortlisted": true
+      },
+      {
+        "id": 202,
+        "candidateName": "Jenny Wilson",
+        "experience": "6 Years Experience",
+        "appliedDate": "November 22, 2022",
+        "shortlisted": false
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "title": "Technical Support Specialist",
+    "status": "Active",
+    "applications": 18,
+    "jobType": "Full Time",
+    "daysRemaining": 10,
+    "postedDate": "1 week ago",
+    "candidates": [
+      {
+        "id": 301,
+        "candidateName": "Cameron Williamson",
+        "experience": "3 Years Experience",
+        "appliedDate": "November 10, 2022",
+        "shortlisted": false
+      },
+      {
+        "id": 302,
+        "candidateName": "Jerome Bell",
+        "experience": "5 Years Experience",
+        "appliedDate": "November 12, 2022",
+        "shortlisted": false
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "title": "Junior Graphic Designer",
+    "status": "Expired",
+    "applications": 0,
+    "jobType": "Internship",
+    "daysRemaining": 0,
+    "postedDate": "1 month ago",
+    "candidates": [
+      {
+        "id": 401,
+        "candidateName": "Kathryn Murphy",
+        "experience": "1 Year Experience",
+        "appliedDate": "October 18, 2022",
+        "shortlisted": false
+      },
+      {
+        "id": 402,
+        "candidateName": "Jacob Jones",
+        "experience": "2 Years Experience",
+        "appliedDate": "October 19, 2022",
+        "shortlisted": false
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "title": "Project Manager",
+    "status": "Expired",
+    "applications": 14,
+    "jobType": "Contract",
+    "daysRemaining": 0,
+    "postedDate": "2 weeks ago",
+    "candidates": [
+      {
+        "id": 501,
+        "candidateName": "Kristin Watson",
+        "experience": "7 Years Experience",
+        "appliedDate": "November 1, 2022",
+        "shortlisted": false
+      },
+      {
+        "id": 502,
+        "candidateName": "Marvin McKinney",
+        "experience": "5 Years Experience",
+        "appliedDate": "November 3, 2022",
+        "shortlisted": true
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "title": "Frontend Developer",
+    "status": "Active",
+    "applications": 62,
+    "jobType": "Full Time",
+    "daysRemaining": 7,
+    "postedDate": "2 days ago",
+    "candidates": [
+      {
+        "id": 601,
+        "candidateName": "Eleanor Pena",
+        "experience": "4 Years Experience",
+        "appliedDate": "November 25, 2022",
+        "shortlisted": false
+      },
+      {
+        "id": 602,
+        "candidateName": "Wade Warren",
+        "experience": "6 Years Experience",
+        "appliedDate": "November 26, 2022",
+        "shortlisted": false
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "title": "Backend Engineer",
+    "status": "Active",
+    "applications": 44,
+    "jobType": "Full Time",
+    "daysRemaining": 14,
+    "postedDate": "4 days ago",
+    "candidates": [
+      {
+        "id": 701,
+        "candidateName": "Leslie Alexander",
+        "experience": "5 Years Experience",
+        "appliedDate": "November 19, 2022",
+        "shortlisted": true
+      },
+      {
+        "id": 702,
+        "candidateName": "Courtney Henry",
+        "experience": "2 Years Experience",
+        "appliedDate": "November 21, 2022",
+        "shortlisted": false
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "title": "Marketing Specialist",
+    "status": "Expired",
+    "applications": 12,
+    "jobType": "Part Time",
+    "daysRemaining": 0,
+    "postedDate": "3 weeks ago",
+    "candidates": [
+      {
+        "id": 801,
+        "candidateName": "Ralph Edwards",
+        "experience": "4 Years Experience",
+        "appliedDate": "November 2, 2022",
+        "shortlisted": false
+      },
+      {
+        "id": 802,
+        "candidateName": "Annette Black",
+        "experience": "3 Years Experience",
+        "appliedDate": "November 5, 2022",
+        "shortlisted": false
+      }
+    ]
+  }
+  
+]

@@ -1,0 +1,18 @@
+[
+    {
+      "email": "employer1@example.com",
+      "password": "1111111",
+      "role": "employer"
+    },
+    {
+      "email": "jobseeker1@example.com",
+      "password": "1111111",
+      "role": "job-seeker"
+    },
+    {
+      "email": "admin1@example.com",
+      "password": "1111111",
+      "role": "admin"
+    }
+  ]
+  
