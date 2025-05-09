@@ -10,7 +10,6 @@ const DashboardSidebar = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
     setIsMenuOpen(false);
   };
   return (
@@ -22,7 +21,7 @@ const DashboardSidebar = () => {
     text-light-text-primary dark:text-dark-text-primary
     p-4
     sticky
-    top-[70px]            
+    top-[65px]            
     h-[calc(100vh-70px)]     
     overflow-y-auto
   "

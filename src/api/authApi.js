@@ -57,3 +57,19 @@ export const registerEmployer = async (formValues) => {
     throw new Error(error.response?.data?.message || 'Registration failed');
   }
 };
+
+
+export const refreshUserToken = async (refreshToken) => {
+  try {
+    const response = await apiClient.post('/api/Accounts/RefreshToken', { refreshToken });
+    
+    if (response.status === 200) {
+      console.log('Token refresh successful:', response.data);
+      return { success: true, data: response.data };
+    }
+    return { success: false, error: 'Failed to refresh token' };
+  } catch (error) {
+    console.error('Token refresh failed:', error.response?.data?.message || error.message);
+    return { success: false, error: error.response?.data?.message || 'Token refresh failed' };
+  }
+};

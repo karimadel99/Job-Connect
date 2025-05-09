@@ -2,9 +2,8 @@ import axios from "axios";
 import setupRequestInterceptors from "./requestInterceptors";
 import setupResponseInterceptor from "./responseInterceptor";
 
-// Use a local development URL or a proxy configuration instead
 const apiClient = axios.create({
-  baseURL: "", // Empty baseURL for development - will rely on proxy in vite.config.js
+  baseURL: "https://job-connect.runasp.net", 
   headers: {
     "Content-Type": "application/json",
     "Accept": "text/plain"

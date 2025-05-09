@@ -1,16 +1,30 @@
 // src/pages/employer/MyJobsPage.jsx
 import React, { useEffect, useState } from 'react';
 import JobRow from '../../components/employer/JobRow'; 
-import jobsData from '../../data/recentJobsData.json';
+import { getAllJobs } from '../../api/employerApi'; // <-- Import your API function
+import Loader from '../../components/Loader';
 
 const MyJobsPage = () => {
   const [jobs, setJobs] = useState([]);
   const [filterType, setFilterType] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const jobsPerPage = 5; //  how many jobs to show per page
 
   useEffect(() => {
-    setJobs(jobsData);
+    const fetchJobs = async () => {
+      setLoading(true);
+      setError(null);
+      const result = await getAllJobs();
+      if (result.success) {
+        setJobs(result.data);
+      } else {
+        setError(result.error || 'Failed to fetch jobs');
+      }
+      setLoading(false);
+    };
+    fetchJobs();
   }, [filterType]);
 
   // 1) Filter the jobs based on filterType
@@ -38,6 +52,18 @@ const MyJobsPage = () => {
       <h2 className="text-2xl font-bold text-light-text-primary dark:text-dark-text-primary mb-2">
         My Jobs ({filteredJobs.length})
       </h2>
+
+      {/* Loading and Error States */}
+      {loading && (
+        <div className="p-4 text-center">
+          <Loader />
+        </div>
+      )}
+      {error && (
+        <div className="p-4 text-center text-red-500">
+          {error}
+        </div>
+      )}
 
       {/* Filter Bar */}
       <div className="flex items-center gap-4 mb-4 bg-light-background dark:bg-dark-background p-3 rounded-lg">
@@ -86,21 +112,23 @@ const MyJobsPage = () => {
       </div>
 
       {/* Jobs List */}
-      <div className="bg-light-background dark:bg-dark-background shadow rounded">
-        {paginatedJobs.map((job) => (
-          <JobRow key={job.id} job={job} />
-        ))}
+      {!loading && !error && (
+        <div className="bg-light-background dark:bg-dark-background shadow rounded">
+          {paginatedJobs.map((job) => (
+            <JobRow key={job.id} job={job} />
+          ))}
 
-        {/* If no jobs match the filter */}
-        {filteredJobs.length === 0 && (
-          <div className="p-4 text-center text-light-text-secondary dark:text-dark-text-secondary">
-            No jobs found.
-          </div>
-        )}
-      </div>
+          {/* If no jobs match the filter */}
+          {filteredJobs.length === 0 && (
+            <div className="p-4 text-center text-light-text-secondary dark:text-dark-text-secondary">
+              No jobs found.
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {!loading && !error && totalPages > 1 && (
         <div className="flex items-center justify-center mt-4">
           <div className="flex gap-3">
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => (

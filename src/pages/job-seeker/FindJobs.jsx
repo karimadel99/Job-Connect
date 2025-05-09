@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import jobsData from '../../data/jobsData.json';
+import { getAllJobs } from '../../api/jobSeekerApi';
+//import jobsData from '../../data/jobsData.json';
 import SearchBar from '../../components/job-seeker/SearchBar';
 import AdvancedFilters from '../../components/job-seeker/AdvancedFilters';
 import JobCard from '../../components/job-seeker/JobCard';
@@ -8,7 +9,7 @@ import ResultsHeader from '../../components/job-seeker/ResultsHeader';
 import Pagination from '../../components/job-seeker/Pagination';
 
 const FindJobs = () => {
-  const [jobs, setJobs] = useState(jobsData);
+  const [jobs, setJobs] = useState([]); 
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState('grid');
   const [sortBy, setSortBy] = useState('latest');
@@ -21,7 +22,6 @@ const FindJobs = () => {
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [locationQuery, setLocationQuery] = useState('');
-  const [savedJobs, setSavedJobs] = useState([]);
 
   // Filter options
   const experienceOptions = [
@@ -65,36 +65,50 @@ const FindJobs = () => {
     'Bachelor Degree'
   ];
 
-  const jobsPerPage = 8;
+  const jobsPerPage = 6;
 
+  // Fetch jobs from API on mount
   useEffect(() => {
-    // Load jobs data
-    let filteredJobs = [...jobsData];
-    
-    // Apply search filters
+    const fetchJobs = async () => {
+      try {
+        const data = await getAllJobs();
+        console.log('Fetched jobs:', data);
+        // Use data.data here
+        const savedJobIds = JSON.parse(localStorage.getItem('savedJobs') || '[]');
+        const jobsWithSaved = (data.data || []).map(job => ({
+          ...job,
+          saved: savedJobIds.includes(job.id)
+        }));
+        setJobs(jobsWithSaved);
+      } catch (error) {
+        setJobs([]);
+      }
+    };
+    fetchJobs();
+  }, []);
+
+  // Filter, search, and sort jobs
+  const getFilteredJobs = () => {
+    let filteredJobs = [...jobs];
     if (searchQuery) {
       filteredJobs = filteredJobs.filter(job => 
-        job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        job.company.toLowerCase().includes(searchQuery.toLowerCase())
+        (job.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (job.company || '').toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-    
     if (locationQuery) {
       filteredJobs = filteredJobs.filter(job => 
-        job.location.toLowerCase().includes(locationQuery.toLowerCase())
+        (job.location || '').toLowerCase().includes(locationQuery.toLowerCase())
       );
     }
-    
-    // Apply selected filters
     if (selectedFilters.jobType && selectedFilters.jobType.length > 0) {
       filteredJobs = filteredJobs.filter(job => 
-        selectedFilters.jobType.includes(job.type)
+        selectedFilters.jobType.includes(job.type || job.jobType || '')
       );
     }
-
     if (selectedFilters.experience) {
       filteredJobs = filteredJobs.filter(job => {
-        const exp = job.yearsOfExperience;
+        const exp = job.yearsOfExperience || 0;
         switch (selectedFilters.experience) {
           case 'Freshers':
             return exp < 1;
@@ -117,54 +131,51 @@ const FindJobs = () => {
         }
       });
     }
-
     if (selectedFilters.salary) {
       filteredJobs = filteredJobs.filter(job => {
-        const jobSalary = parseInt(job.salary.replace(/[^0-9]/g, ''));
+        const jobSalary = parseInt((job.salary || '').replace(/[^0-9]/g, ''));
         const [min, max] = selectedFilters.salary.split(' - ').map(s => parseInt(s.replace(/[^0-9]/g, '')));
         return jobSalary >= min && (!max || jobSalary <= max);
       });
     }
-
     if (selectedFilters.education && selectedFilters.education.length > 0) {
       filteredJobs = filteredJobs.filter(job =>
-        selectedFilters.education.some(edu => job.educationLevel.includes(edu))
+        selectedFilters.education.some(edu => (job.educationLevel || '').includes(edu))
       );
     }
-    
-    // Apply sorting
     if (sortBy === 'latest') {
       filteredJobs.sort((a, b) => new Date(b.postingDate) - new Date(a.postingDate));
     } else if (sortBy === 'newest') {
       filteredJobs.sort((a, b) => new Date(a.postingDate) - new Date(b.postingDate));
     }
-    
-    setJobs(filteredJobs);
-    setCurrentPage(1);
-  }, [searchQuery, locationQuery, selectedFilters, sortBy]);
+    return filteredJobs;
+  };
 
-  // Get current jobs for pagination
+  const filteredJobs = getFilteredJobs();
   const indexOfLastJob = currentPage * jobsPerPage;
   const indexOfFirstJob = indexOfLastJob - jobsPerPage;
-  const currentJobs = jobs.slice(indexOfFirstJob, indexOfLastJob);
-  const totalPages = Math.ceil(jobs.length / jobsPerPage);
+  const currentJobs = filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
+  const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
 
   const toggleSaveJob = (jobId) => {
-    setSavedJobs(prev => 
-      prev.includes(jobId) 
-        ? prev.filter(id => id !== jobId)
-        : [...prev, jobId]
-    );
+    const updatedJobs = jobs.map(job => {
+      if (job.id === jobId) {
+        return { ...job, saved: !job.saved };
+      }
+      return job;
+    });
+    setJobs(updatedJobs);
+    const savedJobIds = updatedJobs.filter(job => job.saved).map(job => job.id);
+    localStorage.setItem('savedJobs', JSON.stringify(savedJobIds));
   };
 
   const handleAdvancedFilterChange = (filterType, value) => {
     setSelectedFilters(prev => {
       const newFilters = { ...prev };
-      
       if (filterType === 'jobType' || filterType === 'education') {
         if (value === 'All') {
           newFilters[filterType] = [];
@@ -179,7 +190,6 @@ const FindJobs = () => {
       } else {
         newFilters[filterType] = value === newFilters[filterType] ? '' : value;
       }
-      
       return newFilters;
     });
   };
@@ -196,7 +206,7 @@ const FindJobs = () => {
           Find Job
         </h1>
         <div className="text-sm">
-          <Link to="/" className="text-light-text-secondary dark:text-dark-text-secondary hover:text-light-primary-600 dark:hover:text-dark-primary-600 transition-colors duration-200">
+          <Link to="/jobseeker/dashboard" className="text-light-text-secondary dark:text-dark-text-secondary hover:text-light-primary-600 dark:hover:text-dark-primary-600 transition-colors duration-200">
             Home
           </Link>
           <span className="mx-2 text-light-text-secondary dark:text-dark-text-secondary">/</span>
@@ -229,7 +239,7 @@ const FindJobs = () => {
       {/* Results */}
       <div className="bg-white dark:bg-dark-neutral-800 rounded-lg shadow-sm">
         <ResultsHeader
-          jobCount={jobs.length}
+          jobCount={filteredJobs.length}
           viewMode={viewMode}
           setViewMode={setViewMode}
           sortBy={sortBy}
@@ -244,7 +254,7 @@ const FindJobs = () => {
                 key={job.id}
                 job={job}
                 viewMode={viewMode}
-                isSaved={savedJobs.includes(job.id)}
+                isSaved={job.saved}
                 onToggleSave={toggleSaveJob}
               />
             ))
@@ -258,7 +268,7 @@ const FindJobs = () => {
         </div>
 
         {/* Pagination */}
-        {jobs.length > 0 && (
+        {filteredJobs.length > 0 && (
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}

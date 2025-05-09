@@ -4,9 +4,13 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [refreshToken, setRefreshToken] = useState(null);
 
   useEffect(() => {
+    // Load user data from localStorage
     const storedUser = localStorage.getItem('user');
+    const storedRefreshToken = localStorage.getItem('refreshToken');
+    
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
       // Normalize the role to lowercase if it exists
@@ -15,6 +19,10 @@ export function AuthProvider({ children }) {
       }
       setUser(parsedUser);
     }
+    
+    if (storedRefreshToken) {
+      setRefreshToken(storedRefreshToken);
+    }
   }, []);
 
   const login = (userData) => {
@@ -22,21 +30,50 @@ export function AuthProvider({ children }) {
     if (userData && userData.role) {
       userData.role = userData.role.toLowerCase();
     }
-    localStorage.setItem('user', JSON.stringify(userData));
-    if (userData.token) {
-      localStorage.setItem('token', userData.token);
+    
+    // Store user data
+    localStorage.setItem('user', JSON.stringify(userData.user));
+    
+    // Store tokens
+    if (userData.user && userData.user.token) {
+      localStorage.setItem('token', userData.user.token);
     }
-    setUser(userData);
+    
+    if (userData.refreshToken) {
+      localStorage.setItem('refreshToken', userData.refreshToken);
+      setRefreshToken(userData.refreshToken);
+    }
+    
+    setUser(userData.user);
+  };
+
+  const updateToken = (newToken) => {
+    // Update token in localStorage and user object
+    localStorage.setItem('token', newToken);
+    
+    // Update the user object with the new token
+    if (user) {
+      const updatedUser = { ...user, token: newToken };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      setUser(updatedUser);
+    }
   };
 
   const logout = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     setUser(null);
+    setRefreshToken(null);
+  };
+
+  const updateRefreshToken = (newRefreshToken) => {
+    localStorage.setItem('refreshToken', newRefreshToken);
+    setRefreshToken(newRefreshToken);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, refreshToken, login, logout, updateToken, updateRefreshToken }}>
       {children}
     </AuthContext.Provider>
   );

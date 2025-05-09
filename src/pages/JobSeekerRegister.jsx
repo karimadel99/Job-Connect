@@ -4,9 +4,9 @@ import * as Yup from 'yup';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
-import { registerJobSeeker } from '../api/authApi';
 import JobSeekerPersonalInfo from '../components/job-seeker/JobSeekerPersonalInfo';
 import JobSeekerJobDetails from '../components/job-seeker/JobSeekerJobDetails';
+import { registerJobSeeker } from '../api/authApi';
 
 
 // Add countries array for phone input dropdown

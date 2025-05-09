@@ -53,15 +53,15 @@ const JobCategoryCarousel = () => {
                         className="flex flex-col items-center justify-center bg-light-primary-100 text-light-text-primary dark:bg-dark-primary-200 dark:text-dark-text-primary rounded-lg py-14 text-center transition-transform duration-500 hover:scale-120 hover:shadow-xl"
                     >
                         <div className="text-light-primary-400 dark:text-dark-primary-400 mb-4">{category.icon}</div>
-                        <h3 className="text-lg font-semibold text-light-text-primary dark:text-dark-text-primary">{category.name}</h3>
+                        <h3 className="text-md font-semibold text-light-text-primary dark:text-dark-text-primary">{category.name}</h3>
                     </SwiperSlide>
                 ))}
                 {/* Custom navigation buttons */}
 
             </Swiper>
-            <div className="swiper-button-prev left-24 absolute transform -translate-y-1/2 text-light-text-primary dark:text-dark-text-primary text-3xl z-10">
+            <div className="swiper-button-prev left-24 absolute transform -translate-y-1/2 text-light-text-primary dark:text-dark-text-primary text-3xl z-10 invisible md:visible">
             </div>
-            <div className="swiper-button-next absolute right-24 transform -translate-y-1/2 text-light-text-primary dark:text-dark-text-primary text-3xl z-10">
+            <div className="swiper-button-next absolute right-24 transform -translate-y-1/2 text-light-text-primary dark:text-dark-text-primary text-3xl z-10 invisible md:visible">
             </div>
         </div>
       </div>

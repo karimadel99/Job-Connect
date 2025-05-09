@@ -5,12 +5,13 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   server: {
-    proxy: {
-      '/api': {
-        target: 'https://job-connect.runasp.net',
-        changeOrigin: true,
-        secure: false,
-      },
-    },
+    // proxy: {
+    //   '/api': {
+    //     target: 'https://job-connect.runasp.net',
+    //     changeOrigin: true,
+    //     secure: false,
+    //   },
+    // },
+    port: 8081, // Change port number 
   },
 });

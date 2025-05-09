@@ -2,10 +2,10 @@ import React from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useNavigate } from 'react-router-dom';
-import { loginUser } from '../api/authApi';
 import PasswordInput from '../components/public/PasswordInput';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
+import { loginUser } from '../api/authApi';
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -26,40 +26,23 @@ const LoginForm = () => {
         .min(6, 'Password must be at least 6 characters')
         .required('Password is required'),
     }),
-    onSubmit: async (values) => {
+    onSubmit: async (values, { setSubmitting }) => {
       try {
         setLoginError('');
-        // Show loading toast
         const loadingToast = toast.loading('Logging in...');
-        
         const result = await loginUser(values.email, values.password);
-
-        // Dismiss loading toast
         toast.dismiss(loadingToast);
 
         if (!result.success) {
           setLoginError(result.error || 'Login failed. Please check your credentials.');
           toast.error(result.error || 'Login failed. Please check your credentials.');
+          setSubmitting(false);
           return;
         }
 
-        const user = result.user;
-        console.log('Login successful:', user);
-
-        // Store token and user data
-        if (user.token) {
-          localStorage.setItem('token', user.token);
-        }
-        localStorage.setItem('user', JSON.stringify(user));
-
-        // Update AuthContext state
-        login(user);
-        
-        // Show success toast
+        login(result.user);
         toast.success('Login successful! Redirecting...');
-
-        // Navigate based on role
-        const role = user.role.toLowerCase();
+        const role = result.user.user?.role.toLowerCase();
         switch (role) {
           case 'employer':
             navigate('/employer/dashboard');
@@ -79,6 +62,7 @@ const LoginForm = () => {
         console.error('Login error:', error);
         setLoginError(error.message || 'Invalid email or password. Please try again.');
         toast.error(error.message || 'Invalid email or password. Please try again.');
+        setSubmitting(false);
       }
     },
   });

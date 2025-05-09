@@ -38,11 +38,26 @@ const JobSeekerJobDetails = ({ formik, goBack }) => {
             value={formik.values.currentOrDesiredJob}
             className="bg-[#EEF2FF] dark:bg-[#413f84] border-t-0 border-b-0 border-[#1E1B4B] dark:border-[#EEF2FF] h-11 text-sm text-[#312E81] dark:text-[#E0E7FF] focus:ring-2 focus:outline-none focus:ring-[#312E81] w-full py-2.5 rounded-lg px-3"
           >
-            
-            <option value="Software Engineer">Software Engineer</option>
-            <option value="Designer">Designer</option>
-            <option value="Project Manager">Project Manager</option>
-            <option value="Business Analyst">Business Analyst</option>
+            <option value="">Select Job Title</option>
+            <optgroup label="Technology">
+              <option value="Software Engineer">Software Engineer</option>
+              <option value="Frontend Developer">Frontend Developer</option>
+              <option value="Backend Developer">Backend Developer</option>
+              <option value="Full Stack Developer">Full Stack Developer</option>
+              <option value="DevOps Engineer">DevOps Engineer</option>
+            </optgroup>
+            <optgroup label="Design">
+              <option value="UI Designer">UI Designer</option>
+              <option value="UX Designer">UX Designer</option>
+              <option value="Graphic Designer">Graphic Designer</option>
+              <option value="Product Designer">Product Designer</option>
+            </optgroup>
+            <optgroup label="Management">
+              <option value="Project Manager">Project Manager</option>
+              <option value="Product Manager">Product Manager</option>
+              <option value="Business Analyst">Business Analyst</option>
+              <option value="Scrum Master">Scrum Master</option>
+            </optgroup>
             <option value="Other">Other</option>
           </select>
           {formik.touched.currentOrDesiredJob && formik.errors.currentOrDesiredJob && (

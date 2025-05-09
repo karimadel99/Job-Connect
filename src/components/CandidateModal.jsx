@@ -34,7 +34,7 @@ const CandidateModal = ({ candidate, onClose }) => {
       onClick={handleBackgroundClick}
     >
       {/* Outer container with max height and overflow for smaller screens */}
-      <div className="relative w-full sm:max-w-lg md:max-w-3xl max-h-[90vh] overflow-y-auto bg-white dark:bg-dark-background rounded shadow-lg">
+      <div className="relative w-full sm:max-w-lg md:max-w-3xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900 border dark:border-gray-700 rounded shadow-lg">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between p-4 border-b">
           <div>
@@ -59,7 +59,7 @@ const CandidateModal = ({ candidate, onClose }) => {
             </button>
             <button
               onClick={onClose}
-              className="absolute top-2 right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-600 text-4xl"
+              className="absolute top-2 right-2 w-10 h-10 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center text-red-600 dark:text-gray-100 text-4xl"
             >
               &times;
             </button>
