@@ -5,12 +5,11 @@ import {
   HiOutlineClipboardList,
   HiOutlineHeart,
   HiOutlineCog,
-  HiOutlineLogout,
-  HiOutlineX
+  HiOutlineLogout
 } from 'react-icons/hi';
 import { useAuth } from '../../contexts/AuthContext';
 
-const JobSeekerSidebar = ({ onCloseSidebar }) => {
+const JobSeekerSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -48,20 +47,11 @@ const JobSeekerSidebar = ({ onCloseSidebar }) => {
 
   return (
     <div className="flex flex-col h-full py-4 bg-white dark:bg-dark-neutral-800 shadow">
-      {/* Close button - Only visible on mobile */}
-      <button
-        onClick={onCloseSidebar}
-        className="md:hidden p-2 ml-2 mb-4 self-start rounded-md hover:bg-light-neutral-100 dark:hover:bg-dark-neutral-700"
-      >
-        <HiOutlineX className="h-6 w-6" />
-      </button>
-
       <nav className="flex-1 space-y-1">
         {navigation.map((item) => (
           <Link
             key={item.name}
             to={item.href}
-            onClick={() => onCloseSidebar?.()}
             className={`
               flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200
               ${isActive(item.href)
