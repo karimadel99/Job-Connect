@@ -1,8 +1,8 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { HiOutlineSearch, HiOutlineBell, HiOutlineMenu } from 'react-icons/hi';
+import { useLocation } from 'react-router-dom';
+import { HiOutlineSearch, HiOutlineBell } from 'react-icons/hi';
 
-const JobSeekerHeader = ({ onMenuClick }) => {
+const JobSeekerHeader = () => {
     const location = useLocation();
     const isDashboardRoute = location.pathname.includes('/jobseeker/dashboard') || location.pathname.includes('/jobseeker');
 
@@ -12,16 +12,6 @@ const JobSeekerHeader = ({ onMenuClick }) => {
                        shadow-sm border-b border-light-neutral-200 dark:border-dark-neutral-700">
             <div className="w-full max-w-screen-2xl mx-auto">
                 <div className="flex items-center h-16 px-4 sm:px-6 lg:px-8">
-                    {/* Hamburger menu - Only show on dashboard routes and mobile */}
-                    {isDashboardRoute && (
-                        <button 
-                            onClick={onMenuClick}
-                            className="md:hidden p-2 mr-2 rounded-md hover:bg-light-neutral-200 dark:hover:bg-dark-neutral-700"
-                        >
-                            <HiOutlineMenu className="h-6 w-6" />
-                        </button>
-                    )}
-
                     {/* Middle section - Search */}
                     <div className="flex-1 w-96 max-w-xl mx-auto">
                         <div className="relative">

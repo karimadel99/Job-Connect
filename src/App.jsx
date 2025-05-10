@@ -2,6 +2,7 @@ import React, { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { Toaster } from 'react-hot-toast';
+import AdminLayout from './layouts/AdminLayout';
 
 const Home = lazy(() => import('./pages/Home'));
 const Login = lazy(() => import('./pages/Login'));
@@ -29,8 +30,9 @@ const AppliedJobs = lazy(() => import('./pages/job-seeker/AppliedJobs'));
 const FavoriteJobs = lazy(() => import('./pages/job-seeker/FavoriteJobs'));
 const JobSeekerSettings = lazy(() => import('./pages/job-seeker/Settings'));
 const JobDetails = lazy(() => import('./pages/job-seeker/JobDetails'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 
-function App() {
+const App = () => {
   const { user } = useAuth();
   return (
     <>
@@ -82,12 +84,19 @@ function App() {
               </Route>
             </Route>
           </Route>
+          {/* ----------- ADMIN ROUTES ----------- */}
+          <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+            <Route path="admin" element={<AdminLayout />}>
+              <Route path="dashboard" element={<AdminDashboard />} />
+              <Route index element={<Navigate to="dashboard" />} />
+            </Route>
+          </Route>
           {/* ----------- CATCH-ALL ROUTE ----------- */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
     </>
   );
-}
+};
 
 export default App;
