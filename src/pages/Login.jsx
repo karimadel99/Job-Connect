@@ -40,9 +40,15 @@ const LoginForm = () => {
           return;
         }
 
-        login(result.user);
+        // Store token, refreshToken, and user in localStorage
+        localStorage.setItem('token', result.user.token);
+        localStorage.setItem('refreshToken', result.user.refreshToken);
+        localStorage.setItem('user', JSON.stringify(result.user));
+
+        login(result.user); // Pass the full user object
+
         toast.success('Login successful! Redirecting...');
-        const role = result.user.user?.role.toLowerCase();
+        const role = result.user.role?.toLowerCase();
         switch (role) {
           case 'employer':
             navigate('/employer/dashboard');

@@ -6,7 +6,9 @@ const ResultsHeader = ({
   viewMode, 
   setViewMode, 
   sortBy, 
-  setSortBy 
+  setSortBy,
+  searchQuery,
+  setSearchQuery
 }) => {
   return (
     <div className="p-6 border-b border-light-neutral-200 dark:border-dark-neutral-700">
@@ -17,8 +19,8 @@ const ResultsHeader = ({
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded-md transition-all duration-200 ${
                 viewMode === 'grid'
-                  ? 'bg-light-primary-100 text-light-primary-600 dark:bg-dark-primary-900 dark:text-dark-primary-400'
-                  : 'text-light-neutral-500 dark:text-dark-neutral-400 hover:bg-light-neutral-100 dark:hover:bg-dark-neutral-700'
+                  ? 'bg-light-primary-50 text-light-primary-600 dark:bg-dark-primary-50 dark:text-dark-primary-400'
+                  : 'text-light-text-tertiary dark:text-dark-text-tertiary hover:bg-light-neutral-100 dark:hover:bg-dark-neutral-700'
               }`}
               aria-label="Grid View"
             >
@@ -28,8 +30,8 @@ const ResultsHeader = ({
               onClick={() => setViewMode('list')}
               className={`p-1.5 rounded-md transition-all duration-200 ${
                 viewMode === 'list'
-                  ? 'bg-light-primary-100 text-light-primary-600 dark:bg-dark-primary-900 dark:text-dark-primary-400'
-                  : 'text-light-neutral-500 dark:text-dark-neutral-400 hover:bg-light-neutral-100 dark:hover:bg-dark-neutral-700'
+                  ? 'bg-light-primary-50 text-light-primary-600 dark:bg-dark-primary-50 dark:text-dark-primary-400'
+                  : 'text-light-text-tertiary dark:text-dark-text-tertiary hover:bg-light-neutral-100 dark:hover:bg-dark-neutral-700'
               }`}
               aria-label="List View"
             >
@@ -37,16 +39,28 @@ const ResultsHeader = ({
             </button>
           </div>
           <span className="text-sm text-light-text-secondary dark:text-dark-text-secondary">
-            {jobCount} jobs found
+            <span className="font-medium text-light-text-primary dark:text-dark-text-primary">{jobCount}</span> jobs found
           </span>
         </div>
         
         <div className="flex items-center space-x-4">
+          {setSearchQuery && (
+            <div className="hidden sm:block relative w-40 md:w-64">
+              <input
+                type="text"
+                placeholder="Search jobs..."
+                value={searchQuery || ''}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="block w-full pl-3 pr-10 py-2 text-sm border border-light-neutral-200 dark:border-dark-neutral-700 rounded-lg bg-light-background-primary dark:bg-dark-background-tertiary text-light-text-primary dark:text-dark-text-primary focus:ring-2 focus:ring-light-primary-500 dark:focus:ring-dark-primary-500 focus:border-light-primary-500 dark:focus:border-dark-primary-500 transition-colors duration-200"
+              />
+            </div>
+          )}
           <div>
             <select
-              className="block w-full pl-3 pr-10 py-2 text-sm border border-light-neutral-200 dark:border-dark-neutral-700 rounded-lg bg-white dark:bg-dark-neutral-700 text-light-text-primary dark:text-dark-text-primary focus:ring-2 focus:ring-light-primary-500 dark:focus:ring-dark-primary-500 focus:border-light-primary-500 dark:focus:border-dark-primary-500 transition-colors duration-200"
+              className="block w-full pl-3 pr-10 py-2 text-sm border border-light-neutral-200 dark:border-dark-neutral-700 rounded-lg bg-light-background-primary dark:bg-dark-background-tertiary text-light-text-primary dark:text-dark-text-primary focus:ring-2 focus:ring-light-primary-500 dark:focus:ring-dark-primary-500 focus:border-light-primary-500 dark:focus:border-dark-primary-500 transition-colors duration-200"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
+              aria-label="Sort by"
             >
               <option value="latest">Latest</option>
               <option value="newest">Newest</option>
