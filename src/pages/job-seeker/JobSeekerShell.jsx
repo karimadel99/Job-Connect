@@ -8,7 +8,7 @@ const JobSeekerShell = ({ children }) => {
   const isDashboardRoute = location.pathname.includes('/jobseeker/dashboard') || location.pathname.includes('/jobseeker');
 
   return (
-    <div className="pt-16 min-h-screen bg-light-background dark:bg-dark-primary-50">
+    <div className="pt-16 min-h-screen bg-light-background dark:bg-dark-background-primary">
       {/* Header */}
       <div className="sticky top-16 z-30 hidden lg:block">
         <JobSeekerHeader />

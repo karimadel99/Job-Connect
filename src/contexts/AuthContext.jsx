@@ -27,24 +27,25 @@ export function AuthProvider({ children }) {
 
   const login = (userData) => {
     // Normalize the role to lowercase before saving
-    if (userData && userData.role) {
-      userData.role = userData.role.toLowerCase();
+    let userObj = userData;
+    let refreshTokenValue = userData.refreshToken;
+    // If userData has a 'user' property, use that (for backward compatibility)
+    if (userData.user) {
+      userObj = userData.user;
+      refreshTokenValue = userData.refreshToken || userData.user.refreshToken;
     }
-    
-    // Store user data
-    localStorage.setItem('user', JSON.stringify(userData.user));
-    
-    // Store tokens
-    if (userData.user && userData.user.token) {
-      localStorage.setItem('token', userData.user.token);
+    if (userObj && userObj.role) {
+      userObj.role = userObj.role.toLowerCase();
     }
-    
-    if (userData.refreshToken) {
-      localStorage.setItem('refreshToken', userData.refreshToken);
-      setRefreshToken(userData.refreshToken);
+    localStorage.setItem('user', JSON.stringify(userObj));
+    if (userObj.token) {
+      localStorage.setItem('token', userObj.token);
     }
-    
-    setUser(userData.user);
+    if (refreshTokenValue) {
+      localStorage.setItem('refreshToken', refreshTokenValue);
+      setRefreshToken(refreshTokenValue);
+    }
+    setUser(userObj);
   };
 
   const updateToken = (newToken) => {

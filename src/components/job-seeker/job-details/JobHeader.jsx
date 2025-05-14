@@ -18,7 +18,7 @@ const JobHeader = ({ job, setShowModal }) => {
       </div>
       <button
         onClick={() => setShowModal(true)}
-        className="mt-6 md:mt-0 md:ml-auto bg-gradient-to-r from-primary-500 to-primary-700 text-white px-8 py-3 rounded-lg shadow-lg hover:from-primary-600 hover:to-primary-800 transition-all duration-200 font-bold text-lg tracking-wide focus:outline-none focus:ring-2 focus:ring-primary-400"
+        className="mt-6 md:mt-0 md:ml-auto bg-gradient-to-r from-primary-500 to-primary-700 text-light-text-primary dark:text-dark-text-primary px-8 py-3 rounded-lg shadow-lg hover:from-primary-600 hover:to-primary-800 transition-all duration-200 font-bold text-lg tracking-wide focus:outline-none focus:ring-2 focus:ring-primary-400"
       >
         Apply Now
       </button>

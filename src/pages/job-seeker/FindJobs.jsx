@@ -199,14 +199,14 @@ const FindJobs = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 min-h-screen bg-light-background-primary dark:bg-dark-background-primary">
+    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 min-h-screen bg-light-background-tertiary dark:bg-dark-background-primary">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-light-text-primary dark:text-dark-text-primary">
           Find Job
         </h1>
         <div className="text-sm">
-          <Link to="/jobseeker/dashboard" className="text-light-text-secondary dark:text-dark-text-secondary hover:text-light-primary-600 dark:hover:text-dark-primary-600 transition-colors duration-200">
+          <Link to="/jobseeker/dashboard" className="text-light-text-secondary dark:text-dark-text-secondary hover:text-light-primary-600 dark:hover:text-dark-primary-400 transition-colors duration-200">
             Home
           </Link>
           <span className="mx-2 text-light-text-secondary dark:text-dark-text-secondary">/</span>
@@ -215,7 +215,7 @@ const FindJobs = () => {
       </div>
 
       {/* Search Section */}
-      <div className="bg-white dark:bg-dark-neutral-800 rounded-lg shadow-sm p-6 mb-8">
+      <div className="bg-light-background-primary dark:bg-dark-background-secondary rounded-lg shadow-sm p-6 mb-8 border border-light-neutral-200 dark:border-dark-neutral-700">
         <SearchBar
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -237,7 +237,7 @@ const FindJobs = () => {
       </div>
 
       {/* Results */}
-      <div className="bg-white dark:bg-dark-neutral-800 rounded-lg shadow-sm">
+      <div className="bg-light-background-primary dark:bg-dark-background-secondary rounded-lg shadow-sm border border-light-neutral-200 dark:border-dark-neutral-700">
         <ResultsHeader
           jobCount={filteredJobs.length}
           viewMode={viewMode}
@@ -259,10 +259,25 @@ const FindJobs = () => {
               />
             ))
           ) : (
-            <div className="text-center py-8">
-              <p className="text-light-text-secondary dark:text-dark-text-secondary">
+            <div className="text-center py-12 px-4">
+              <p className="text-light-text-secondary dark:text-dark-text-secondary mb-2">
                 No jobs found matching your criteria.
               </p>
+              <button 
+                onClick={() => {
+                  setSearchQuery('');
+                  setLocationQuery('');
+                  setSelectedFilters({
+                    experience: '',
+                    salary: '',
+                    jobType: [],
+                    education: []
+                  });
+                }}
+                className="text-light-primary-600 dark:text-dark-primary-400 hover:text-light-primary-700 dark:hover:text-dark-primary-500 font-medium"
+              >
+                Clear all filters
+              </button>
             </div>
           )}
         </div>

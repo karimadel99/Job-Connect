@@ -46,19 +46,19 @@ const AppliedJobs = () => {
   }
 
   const statusColors = {
-    'Active': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-    'Under Review': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-    'Interviewed': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-    'Rejected': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-    'Accepted': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+    'Active': 'bg-light-success-light text-light-success-dark dark:bg-dark-success-dark/30 dark:text-dark-success-light',
+    'Under Review': 'bg-light-primary-50 text-light-primary-700 dark:bg-dark-primary-900/30 dark:text-dark-primary-300',
+    'Interviewed': 'bg-light-primary-100 text-light-primary-800 dark:bg-dark-primary-800/30 dark:text-dark-primary-400',
+    'Rejected': 'bg-light-error-light text-light-error-dark dark:bg-dark-error-dark/30 dark:text-dark-error-light',
+    'Accepted': 'bg-light-success-light text-light-success-dark dark:bg-dark-success-dark/30 dark:text-dark-success-light',
   };
 
   const jobTypeColors = {
-    'Full-time': 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200',
-    'Part-time': 'bg-purple-50 text-purple-700 dark:bg-purple-900 dark:text-purple-200',
-    'Remote': 'bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-200',
-    'Contract': 'bg-orange-50 text-orange-700 dark:bg-orange-900 dark:text-orange-200',
-    'Temporary': 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200',
+    'Full-time': 'bg-light-primary-50 text-light-primary-700 dark:bg-dark-primary-900/30 dark:text-dark-primary-300',
+    'Part-time': 'bg-light-primary-100 text-light-primary-800 dark:bg-dark-primary-800/30 dark:text-dark-primary-400',
+    'Remote': 'bg-light-success-light text-light-success-dark dark:bg-dark-success-dark/30 dark:text-dark-success-light',
+    'Contract': 'bg-light-primary-200 text-light-primary-900 dark:bg-dark-primary-700/30 dark:text-dark-primary-500',
+    'Temporary': 'bg-light-primary-50 text-light-primary-700 dark:bg-dark-primary-900/30 dark:text-dark-primary-300',
   };
 
   const filteredApplications = applications.filter(app => {
@@ -111,7 +111,7 @@ const AppliedJobs = () => {
               placeholder="Search applications..."
               value={searchQuery}
               onChange={handleSearchChange}
-              className="pl-10 pr-4 py-2 w-full rounded-md border border-light-neutral-200 dark:border-dark-neutral-700 bg-light-background dark:bg-dark-neutral-700 text-light-text-primary dark:text-dark-text-primary focus:ring-light-primary-500 dark:focus:ring-dark-primary-500 focus:border-light-primary-500 dark:focus:border-dark-primary-500"
+              className="pl-10 pr-4 py-2 w-full rounded-md border border-light-neutral-200 dark:border-dark-neutral-700 bg-light-background-primary dark:bg-dark-background-tertiary text-light-text-primary dark:text-dark-text-primary focus:ring-2 focus:ring-light-primary-500 dark:focus:ring-dark-primary-500 focus:border-light-primary-500 dark:focus:border-dark-primary-500 transition-colors"
             />
           </div>
           <div className="relative">
@@ -119,7 +119,8 @@ const AppliedJobs = () => {
             <select
               value={statusFilter}
               onChange={handleStatusFilterChange}
-              className="pl-10 pr-4 py-2 rounded-md border border-light-neutral-200 dark:border-dark-neutral-700 bg-light-background dark:bg-dark-neutral-700 text-light-text-primary dark:text-dark-text-primary focus:ring-light-primary-500 dark:focus:ring-dark-primary-500 focus:border-light-primary-500 dark:focus:border-dark-primary-500"
+              className="pl-10 pr-4 py-2 rounded-md border border-light-neutral-200 dark:border-dark-neutral-700 bg-light-background-primary dark:bg-dark-background-tertiary text-light-text-primary dark:text-dark-text-primary focus:ring-2 focus:ring-light-primary-500 dark:focus:ring-dark-primary-500 focus:border-light-primary-500 dark:focus:border-dark-primary-500 transition-colors"
+              aria-label="Filter by status"
             >
               <option value="all">All Status</option>
               <option value="Active">Active</option>
@@ -133,9 +134,9 @@ const AppliedJobs = () => {
       </div>
 
       {/* Desktop Table View */}
-      <div className="hidden md:block bg-white dark:bg-dark-neutral-800 rounded-lg shadow overflow-hidden">
+      <div className="hidden md:block bg-light-background-primary dark:bg-dark-background-secondary rounded-lg shadow overflow-hidden border border-light-neutral-200 dark:border-dark-neutral-700">
         <table className="min-w-full divide-y divide-light-neutral-200 dark:divide-dark-neutral-700">
-          <thead className="bg-light-neutral-50 dark:bg-dark-neutral-700">
+          <thead className="bg-light-background-secondary dark:bg-dark-background-tertiary">
             <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider">
                 Jobs
@@ -148,9 +149,9 @@ const AppliedJobs = () => {
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white dark:bg-dark-neutral-800 divide-y divide-light-neutral-200 dark:divide-dark-neutral-700">
+          <tbody className="bg-light-background-primary dark:bg-dark-background-secondary divide-y divide-light-neutral-200 dark:divide-dark-neutral-700">
             {currentItems.map((app) => (
-              <tr key={app.id} className="hover:bg-light-neutral-50 dark:hover:bg-dark-neutral-700">
+              <tr key={app.id} className="hover:bg-light-neutral-50 dark:hover:bg-dark-neutral-700/20 transition-colors">
                 <td className="px-6 py-4">
                   <div className="flex items-center">
                     <div className="flex-shrink-0 h-10 w-10">
@@ -175,7 +176,7 @@ const AppliedJobs = () => {
                         {app.location}
                       </div>
                       <div className="mt-1">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${jobTypeColors[app.jobType] || 'bg-gray-100 text-gray-800'}`}>
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${jobTypeColors[app.jobType] || 'bg-light-neutral-100 text-light-neutral-700 dark:bg-dark-neutral-700 dark:text-dark-neutral-300'}`}>
                           {app.jobType}
                         </span>
                         <span className="ml-2 text-xs text-light-text-secondary dark:text-dark-text-secondary">
@@ -187,7 +188,7 @@ const AppliedJobs = () => {
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center text-sm text-light-text-secondary dark:text-dark-text-secondary">
-                    <FaCalendarAlt className="mr-1 h-3 w-3" />
+                    <FaCalendarAlt className="mr-1 h-3 w-3 text-light-primary-500 dark:text-dark-primary-400" />
                     {app.appliedDate}
                   </div>
                 </td>
@@ -205,7 +206,7 @@ const AppliedJobs = () => {
       {/* Mobile Card View */}
       <div className="md:hidden space-y-4">
         {currentItems.map((app) => (
-          <div key={app.id} className="bg-white dark:bg-dark-neutral-800 rounded-lg shadow p-4">
+          <div key={app.id} className="bg-light-background-primary dark:bg-dark-background-secondary rounded-lg shadow p-4 border border-light-neutral-200 dark:border-dark-neutral-700">
             <div className="flex items-center">
               <div className="flex-shrink-0 h-12 w-12">
                 <img 
@@ -221,7 +222,7 @@ const AppliedJobs = () => {
               <div className="ml-4 flex-1">
                 <div className="text-sm font-medium text-light-text-primary dark:text-dark-text-primary">{app.position}</div>
                 <div className="flex items-center text-sm text-light-text-secondary dark:text-dark-text-secondary">
-                  <FaBuilding className="mr-1 h-3 w-3" />
+                  <FaBuilding className="mr-1 h-3 w-3 text-light-primary-500 dark:text-dark-primary-400" />
                   {app.company}
                 </div>
               </div>
@@ -231,16 +232,16 @@ const AppliedJobs = () => {
             </div>
             <div className="mt-2 grid grid-cols-2 gap-2">
               <div className="flex items-center text-sm text-light-text-secondary dark:text-dark-text-secondary">
-                <FaMapMarkerAlt className="mr-1 h-3 w-3" />
+                <FaMapMarkerAlt className="mr-1 h-3 w-3 text-light-primary-500 dark:text-dark-primary-400" />
                 {app.location}
               </div>
               <div className="flex items-center text-sm text-light-text-secondary dark:text-dark-text-secondary">
-                <FaCalendarAlt className="mr-1 h-3 w-3" />
+                <FaCalendarAlt className="mr-1 h-3 w-3 text-light-primary-500 dark:text-dark-primary-400" />
                 {app.appliedDate}
               </div>
             </div>
             <div className="mt-2 flex items-center">
-              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${jobTypeColors[app.jobType] || 'bg-gray-100 text-gray-800'}`}>
+              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${jobTypeColors[app.jobType] || 'bg-light-neutral-100 text-light-neutral-700 dark:bg-dark-neutral-700 dark:text-dark-neutral-300'}`}>
                 {app.jobType}
               </span>
               <span className="ml-2 text-xs text-light-text-secondary dark:text-dark-text-secondary">
@@ -253,7 +254,7 @@ const AppliedJobs = () => {
 
       {/* No Results Message */}
       {filteredApplications.length === 0 && (
-        <div className="text-center py-8 bg-white dark:bg-dark-neutral-800 rounded-lg shadow">
+        <div className="text-center py-8 bg-light-background-primary dark:bg-dark-background-secondary rounded-lg shadow border border-light-neutral-200 dark:border-dark-neutral-700">
           <p className="text-light-text-secondary dark:text-dark-text-secondary">No applications found matching your criteria.</p>
         </div>
       )}
@@ -270,11 +271,12 @@ const AppliedJobs = () => {
                   ? 'text-light-neutral-300 dark:text-dark-neutral-600 cursor-not-allowed'
                   : 'text-light-text-primary dark:text-dark-text-primary hover:bg-light-neutral-100 dark:hover:bg-dark-neutral-700'
               }`}
+              aria-label="Previous page"
             >
               <HiOutlineChevronLeft className="h-5 w-5" />
             </button>
             <div className="px-4 text-sm text-light-text-primary dark:text-dark-text-primary">
-              Page {currentPage} of {totalPages}
+              Page <span className="font-medium">{currentPage}</span> of <span className="font-medium">{totalPages}</span>
             </div>
             <button
               onClick={() => paginate(currentPage + 1)}
@@ -284,6 +286,7 @@ const AppliedJobs = () => {
                   ? 'text-light-neutral-300 dark:text-dark-neutral-600 cursor-not-allowed'
                   : 'text-light-text-primary dark:text-dark-text-primary hover:bg-light-neutral-100 dark:hover:bg-dark-neutral-700'
               }`}
+              aria-label="Next page"
             >
               <HiOutlineChevronRight className="h-5 w-5" />
             </button>
