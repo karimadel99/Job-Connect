@@ -1,20 +1,71 @@
 import React from "react";
-const CompanyInfo = ({ job }) => (
-  <div className="bg-light-neutral-50 dark:bg-dark-neutral-700 rounded-lg p-4">
-    <h3 className="font-semibold mb-2 text-light-text-primary dark:text-dark-text-primary">{job.company}</h3>
-    <div className="text-sm text-light-text-secondary dark:text-dark-text-secondary mb-2">{job.companyDescription || "No company description."}</div>
-    <ul className="text-xs text-light-text-secondary dark:text-dark-text-secondary space-y-1 mb-2">
-      <li><strong>Founded:</strong> {job.founded || "-"}</li>
-      <li><strong>Organization type:</strong> {job.organizationType || "-"}</li>
-      <li><strong>Company size:</strong> {job.companySize || "-"}</li>
-      <li><strong>Email:</strong> {job.companyEmail || "-"}</li>
-      <li><strong>Website:</strong> <a href={job.companyWebsite} target="_blank" rel="noopener noreferrer">{job.companyWebsite || "-"}</a></li>
-    </ul>
-    <div className="flex gap-2">
-      {job.companyFacebook && <a href={job.companyFacebook} className="text-blue-600 hover:underline text-xs" target="_blank" rel="noopener noreferrer">Facebook</a>}
-      {job.companyTwitter && <a href={job.companyTwitter} className="text-blue-600 hover:underline text-xs" target="_blank" rel="noopener noreferrer">Twitter</a>}
-      {job.companyLinkedIn && <a href={job.companyLinkedIn} className="text-blue-600 hover:underline text-xs" target="_blank" rel="noopener noreferrer">LinkedIn</a>}
+import {
+  HiMail,
+  HiOfficeBuilding,
+  HiCalendar,
+  HiUserGroup,
+} from "react-icons/hi";
+
+const CompanyInfo = ({ job }) => {
+  const employer = job.employer || {};
+
+  const items = [
+    {
+      icon: HiMail,
+      label: "Email",
+      value: employer.email || "Not available",
+      fullRow: true,
+    },
+    {
+      icon: HiOfficeBuilding,
+      label: "Industry",
+      value: employer.industry || "Not specified",
+    },
+    {
+      icon: HiUserGroup,
+      label: "Company Size",
+      value: employer.companySize || "Not specified",
+    },
+    {
+      icon: HiCalendar,
+      label: "Founded",
+      value: employer.foundingDate
+        ? new Date(employer.foundingDate).getFullYear()
+        : "Not specified",
+    },
+  ];
+
+  return (
+    <div className="bg-white dark:bg-dark-background-secondary rounded-xl ">
+      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+        About {employer.companyName || "Company"}
+      </h3>
+      <div className="mb-6">
+        <h4 className="text-sm text-gray-500 dark:text-gray-400 mb-1">Contact Person</h4>
+        <p className="text-sm font-medium text-gray-900 dark:text-white">
+          {employer.name || "Not available"}
+        </p>
+      </div>
+      <div className="grid grid-cols-1 gap-6">
+        {items.map(({ icon: Icon, label, value, fullRow }, index) => (
+          <div
+            key={index}
+            className={`flex items-start gap-4`}
+          >
+            <div className="p-2 rounded-md bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300">
+              <Icon className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">{label}</div>
+              <div className="text-sm font-medium text-gray-900 dark:text-white break-words">
+                {value}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+};
+
 export default CompanyInfo;

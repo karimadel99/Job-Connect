@@ -1,25 +1,116 @@
-import React from "react";
+import React, { useState } from "react";
 
 export default function JobCard({ job }) {
+  const [showToast, setShowToast] = useState(false);
+
+  const handleApplyClick = () => {
+    setShowToast(true);
+    // Auto-hide toast after 4 seconds
+    setTimeout(() => {
+      setShowToast(false);
+    }, 4000);
+  };
+
   return (
-    <div className="p-4 rounded-lg shadow-md bg-light-primary-100 text-light-text-primary dark:bg-dark-primary-200 dark:text-dark-text-primary hover:scale-[102%] transition-all">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-medium">{job.type}</span>
-        <span className="text-sm font-medium">{job.location}</span>
+    <>
+      <div className="group bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl border border-light-primary-100 dark:border-gray-700 transition-all duration-300 hover:scale-105">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <span className="px-3 py-1 text-xs font-medium bg-light-primary-100 dark:bg-blue-900/30 text-light-primary-600 dark:text-blue-300 rounded-full">
+            {job.type}
+          </span>
+          <div className="flex items-center text-sm text-light-text-secondary dark:text-gray-400">
+            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            {job.location}
+          </div>
+        </div>
+
+        {/* Company and Title */}
+        <div className="flex items-center gap-3 mb-4">
+          <img
+            src={job.companyLogo}
+            alt={`${job.title} logo`}
+            className="w-12 h-12 rounded-lg object-cover border border-light-primary-100 dark:border-gray-600 bg-white dark:bg-gray-700"
+          />
+          <div className="flex-1">
+            <h3 className="text-lg font-bold text-light-text-primary dark:text-white group-hover:text-light-primary-500 dark:group-hover:text-blue-400 transition-colors duration-200">
+              {job.title}
+            </h3>
+            <p className="text-sm text-light-text-secondary dark:text-gray-400">
+              {job.category}
+            </p>
+          </div>
+        </div>
+
+        {/* Salary */}
+        <div className="mb-6">
+          <div className="flex items-center text-light-primary-500 dark:text-green-400">
+            <svg className="w-8 h-8 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+            </svg>
+            <span className="font-semibold">{job.salary}</span>
+          </div>
+        </div>
+
+        {/* Apply Button */}
+        <button 
+          onClick={handleApplyClick}
+          className="w-full px-4 py-3 rounded-lg font-medium bg-light-primary-400 hover:bg-light-primary-500 dark:bg-blue-600 dark:hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center"
+        >
+          <span>Apply Now</span>
+          <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </button>
       </div>
-      <div className="flex items-center gap-3 mb-3">
-        <img
-          src={job.companyLogo}
-          alt={`${job.title} logo`}
-          className="w-8 h-8 rounded-full object-cover"
-        />
-        <h3 className="text-lg font-bold">{job.title}</h3>
-      </div>
-      <p className="text-sm mb-4">{job.category}</p>
-      <p className="text-sm font-semibold mb-4">{job.salary}</p>
-      <button className="px-4 py-2 rounded-lg font-medium bg-light-primary-400 text-light-background hover:bg-light-primary-500 dark:bg-dark-primary-300 dark:text-dark-text-primary dark:hover:bg-dark-primary-400 transition-all">
-        Apply Now
-      </button>
-    </div>
+
+      {/* Toast Notification */}
+      {showToast && (
+        <div className="fixed top-4 right-4 z-50 bg-orange-50 dark:bg-orange-900/90 text-orange-800 dark:text-orange-200 px-6 py-4 rounded-lg shadow-lg border-l-4 border-orange-500 animate-slide-in-right backdrop-blur-sm">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <svg className="w-5 h-5 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium">
+                Please login or register to browse and apply for jobs!
+              </p>
+            </div>
+            <div className="ml-auto pl-3">
+              <button
+                onClick={() => setShowToast(false)}
+                className="inline-flex text-orange-400 hover:text-orange-600 dark:text-orange-300 dark:hover:text-orange-100"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add custom CSS for animation */}
+      <style jsx>{`
+        @keyframes slide-in-right {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        .animate-slide-in-right {
+          animation: slide-in-right 0.3s ease-out;
+        }
+      `}</style>
+    </>
   );
 }

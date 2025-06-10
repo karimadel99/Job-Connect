@@ -1,6 +1,7 @@
 // src/components/employer/EmployerPersonalInfo.jsx
 import React from 'react';
-import PasswordInput from '../public/PasswordInput'; // Adjust the import path as needed
+import PasswordInput from '../public/PasswordInput';
+import PhoneInput from '../public/PhoneInput';
 
 const EmployerPersonalInfo = ({ formik, showPassword, setShowPassword, handleNext, handleClearProgress }) => {
   return (
@@ -66,28 +67,18 @@ const EmployerPersonalInfo = ({ formik, showPassword, setShowPassword, handleNex
         <label htmlFor="phoneNumber" className="block text-gray-800 dark:text-gray-200 mb-2">
           Phone Number
         </label>
-        <div className="flex">
-          <button
-            type="button"
-            className="shrink-0 z-10 inline-flex items-center py-2.5 px-4 text-sm font-medium text-[#312E81] dark:text-[#E0E7FF] bg-[#EEF2FF] dark:bg-[#413f84] border-0 rounded-l-lg h-11"
-          >
-            <span className="mr-2">🇦🇷</span>
-            +54
-          </button>
-          <input
-            type="tel"
-            name="phoneNumber"
-            id="phoneNumber"
-            placeholder="123-456-7890"
-            value={formik.values.phoneNumber}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-            className="block p-2.5 w-full z-20 text-[#312E81] dark:text-[#E0E7FF] bg-[#EEF2FF] dark:bg-[#413f84] border-0 rounded-r-lg focus:ring-2 focus:outline-none focus:ring-[#312E81] h-11"
-          />
-        </div>
-        {formik.touched.phoneNumber && formik.errors.phoneNumber && (
-          <p className="mt-1 text-sm text-red-600">{formik.errors.phoneNumber}</p>
-        )}
+        <PhoneInput
+          name="phoneNumber"
+          value={formik.values.phoneNumber}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          error={formik.errors.phoneNumber}
+          touched={formik.touched.phoneNumber}
+          buttonClassName="shrink-0 z-10 inline-flex items-center py-2.5 px-4 text-sm font-medium text-[#312E81] dark:text-[#E0E7FF] bg-[#EEF2FF] dark:bg-[#413f84] border-0 rounded-l-lg h-11"
+          inputClassName="block p-2.5 w-full z-20 text-[#312E81] dark:text-[#E0E7FF] bg-[#EEF2FF] dark:bg-[#413f84] border-0 rounded-r-lg focus:ring-2 focus:outline-none focus:ring-[#312E81] h-11"
+          dropdownClassName="absolute top-full left-0 z-20 bg-white dark:bg-[#2D2B63] divide-y divide-gray-100 dark:divide-gray-700 rounded-lg shadow-lg w-64 max-h-60 overflow-y-auto"
+          errorClassName="mt-1 text-sm text-red-600"
+        />
       </div>
 
       <PasswordInput

@@ -45,19 +45,31 @@ export const registerEmployer = async (formValues) => {
       companyDescription: formValues.companyDescription || ""
     };
 
-    console.log('Sending registration request with payload:', payload);
     const response = await apiClient.post('/api/Accounts/Register/Employer', payload);
 
-    if (response.status === 200) {
-      console.log('Registration successful:', response.data);
-      return response.data;
+    if (response.status === 200 && response.data) {
+      return {
+        success: true,
+        data: response.data,
+        token: response.data.token,
+        user: {
+          firstName: response.data.firstName,
+          lastName: response.data.lastName,
+          email: response.data.email,
+          role: 'employer'
+        }
+      };
     }
+    
+    throw new Error('Invalid response format from server');
   } catch (error) {
-    console.error('Registration failed:', error);
-    throw new Error(error.response?.data?.message || 'Registration failed');
+    const errorMessage = error.response?.data?.message || error.message || 'Registration failed';
+    return {
+      success: false,
+      error: errorMessage
+    };
   }
 };
-
 
 export const refreshUserToken = async (refreshToken) => {
   try {
@@ -71,5 +83,37 @@ export const refreshUserToken = async (refreshToken) => {
   } catch (error) {
     console.error('Token refresh failed:', error.response?.data?.message || error.message);
     return { success: false, error: error.response?.data?.message || 'Token refresh failed' };
+  }
+};
+
+export const getAllTags = async () => {
+  try {
+    console.log('Fetching all tags/categories');
+    const response = await apiClient.get('/api/Home/GetAllTags');
+    
+    if (response.status === 200) {
+      console.log('Tags fetched successfully:', response.data);
+      return { success: true, data: response.data };
+    }
+    return { success: false, error: 'Failed to fetch tags' };
+  } catch (error) {
+    console.error('Failed to fetch tags:', error.response?.data?.message || error.message);
+    return { success: false, error: error.response?.data?.message || 'Failed to fetch tags' };
+  }
+};
+
+export const submitContactForm = async (contactData) => {
+  try {
+    console.log('Submitting contact form:', contactData);
+    const response = await apiClient.post('/api/Home/ContactUs', contactData);
+    
+    if (response.status === 200) {
+      console.log('Contact form submitted successfully:', response.data);
+      return { success: true, data: response.data };
+    }
+    return { success: false, error: 'Failed to submit contact form' };
+  } catch (error) {
+    console.error('Failed to submit contact form:', error.response?.data?.message || error.message);
+    return { success: false, error: error.response?.data?.message || 'Failed to submit contact form' };
   }
 };

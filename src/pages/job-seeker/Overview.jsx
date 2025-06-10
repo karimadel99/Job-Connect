@@ -1,97 +1,182 @@
 import React, { useEffect, useState } from 'react';
 import { HiOutlineBriefcase, HiOutlineHeart, HiOutlineBell } from 'react-icons/hi';
-import jobsData from '../../data/jobsData.json';
 import { Link } from 'react-router-dom';
+import { getAppliedJobs, getSavedJobs } from '../../api/jobSeekerApi';
+import { toast } from 'react-hot-toast';
+import Loader from '../../components/Loader';
 
 const Overview = () => {
   const [appliedJobs, setAppliedJobs] = useState([]);
-  const [favoriteJobs, setFavoriteJobs] = useState([]);
-  const [jobAlerts, setJobAlerts] = useState(0);
+  const [savedJobs, setSavedJobs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [profileComplete, setProfileComplete] = useState(false);
 
   useEffect(() => {
-    setAppliedJobs(jobsData.slice(0, 4));
-    const savedJobIds = JSON.parse(localStorage.getItem('savedJobs') || '[]');
-    setFavoriteJobs(jobsData.filter(job => savedJobIds.includes(job.id)));
-    setJobAlerts(574);
-    setProfileComplete(false);
+    fetchDashboardData();
   }, []);
 
-  function generateRandomAppliedDate() {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const randomMonth = months[Math.floor(Math.random() * months.length)];
-    const randomDay = Math.floor(Math.random() * 28) + 1;
-    const randomYear = 2023;
-    const randomHour = Math.floor(Math.random() * 24);
-    const randomMinute = Math.floor(Math.random() * 60);
-    return `${randomMonth} ${randomDay}, ${randomYear} ${randomHour}:${randomMinute.toString().padStart(2, '0')}`;
-  }
+  const fetchDashboardData = async () => {
+    setIsLoading(true);
+    try {
+      const [appliedJobsResponse, savedJobsResponse] = await Promise.all([
+        getAppliedJobs(),
+        getSavedJobs()
+      ]);
+
+      if (appliedJobsResponse.error) {
+        toast.error(appliedJobsResponse.error);
+      } else {
+        const appliedJobsWithExpired = (appliedJobsResponse.data || []).map(job => ({
+          ...job,
+          isExpired: job.daysRemaining === 0
+        }));
+        setAppliedJobs(appliedJobsWithExpired);
+      }
+
+      if (savedJobsResponse.error) {
+        toast.error(savedJobsResponse.error);
+      } else {
+        const savedJobsWithExpired = (savedJobsResponse.data || []).map(job => ({
+          ...job,
+          isExpired: job.daysRemaining === 0
+        }));
+        setSavedJobs(savedJobsWithExpired);
+      }
+    } catch (error) {
+      toast.error('Failed to fetch dashboard data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 min-h-screen bg-light-background dark:bg-dark-background">
-      <h1 className="text-2xl font-bold mb-4 text-light-text-primary dark:text-dark-text-primary">Hello, Esther Howard</h1>
-      <p className="mb-6 text-light-text-secondary dark:text-dark-text-secondary">Here is your daily activities and job alerts</p>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div className="p-6 rounded-lg bg-light-neutral-50 dark:bg-dark-neutral-700 flex items-center">
-          <HiOutlineBriefcase className="text-3xl text-light-primary-600 dark:text-dark-primary-400 mr-4" />
-          <div>
-            <div className="text-2xl font-bold text-light-text-primary dark:text-dark-text-primary">{appliedJobs.length}</div>
-            <div className="text-light-text-secondary dark:text-dark-text-secondary">Applied jobs</div>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold mb-2 text-light-text-primary dark:text-dark-text-primary">Dashboard Overview</h1>
+          <p className="text-light-text-secondary dark:text-dark-text-secondary">Track your job applications and saved positions</p>
+        </div>
+        <button 
+          onClick={fetchDashboardData} 
+          className="px-4 py-2 bg-light-primary-600 dark:bg-dark-primary-400 text-white rounded-lg hover:opacity-90 transition-opacity"
+        >
+          Refresh
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="p-6 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg transform hover:scale-[1.02] transition-transform">
+          <div className="flex items-center">
+            <HiOutlineBriefcase className="text-4xl opacity-90 mr-4" />
+            <div>
+              <div className="text-3xl font-bold">{appliedJobs.length || 0}</div>
+              <div className="text-blue-100">Applied jobs</div>
+            </div>
           </div>
         </div>
-        <div className="p-6 rounded-lg bg-yellow-50 dark:bg-yellow-900 flex items-center">
-          <HiOutlineHeart className="text-3xl text-yellow-500 mr-4" />
-          <div>
-            <div className="text-2xl font-bold text-light-text-primary dark:text-dark-text-primary">{favoriteJobs.length}</div>
-            <div className="text-light-text-secondary dark:text-dark-text-secondary">Favorite jobs</div>
+        
+        <div className="p-6 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-lg transform hover:scale-[1.02] transition-transform">
+          <div className="flex items-center">
+            <HiOutlineHeart className="text-4xl opacity-90 mr-4" />
+            <div>
+              <div className="text-3xl font-bold">{savedJobs.length || 0}</div>
+              <div className="text-purple-100">Saved jobs</div>
+            </div>
           </div>
         </div>
       </div>
+
       {!profileComplete && (
-        <div className="bg-red-100 text-red-800 rounded-lg p-6 flex flex-col sm:flex-row items-center mb-6 gap-4 sm:gap-0">
-          <img src="/assets/images/avatar-placeholder.png" alt="Profile" className="h-12 w-12 rounded-full mr-0 sm:mr-4 mb-4 sm:mb-0" />
+        <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl p-6 flex flex-col sm:flex-row items-center mb-8 gap-4 sm:gap-0 shadow-lg">
           <div className="flex-1 text-center sm:text-left">
-            <div className="font-semibold mb-1">Your profile editing is not completed.</div>
-            <div className="text-sm">Complete your profile editing &amp; build your custom Resume</div>
+            <div className="font-semibold text-xl mb-1">Complete Your Profile</div>
+            <div className="text-white/90">Enhance your job search by completing your profile and building a custom resume</div>
           </div>
-          <Link to="/jobseeker/dashboard/settings" className="mt-4 sm:mt-0 sm:ml-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Edit Profile</Link>
+          <Link 
+            to="/jobseeker/dashboard/settings" 
+            className="px-6 py-2 bg-white text-red-500 rounded-lg font-semibold hover:bg-opacity-90 transition-colors shadow-md"
+          >
+            Edit Profile
+          </Link>
         </div>
       )}
-      <div className="bg-white dark:bg-dark-neutral-800 rounded-lg shadow overflow-hidden">
-        <div className="p-6 border-b border-light-neutral-200 dark:border-dark-neutral-700 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <h2 className="text-lg font-semibold text-light-text-primary dark:text-dark-text-primary">Recently Applied</h2>
-          <Link to="/jobseeker/dashboard/applied-jobs" className="text-light-primary-600 dark:text-dark-primary-400 hover:underline text-sm">View all</Link>
+
+      <div className="bg-white dark:bg-dark-neutral-800 rounded-xl shadow-lg overflow-hidden">
+        <div className="p-6 border-b border-light-neutral-200 dark:border-dark-neutral-700 flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-light-text-primary dark:text-dark-text-primary">Recent Applications</h2>
+          <Link 
+            to="/jobseeker/dashboard/applied-jobs" 
+            className="text-light-primary-600 dark:text-dark-primary-400 hover:underline font-medium"
+          >
+            View all applications
+          </Link>
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-light-neutral-200 dark:divide-dark-neutral-700 text-sm">
-            <thead className="bg-light-neutral-50 dark:bg-dark-neutral-700">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider">Job</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider">Date Applied</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider">Action</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white dark:bg-dark-neutral-800 divide-y divide-light-neutral-200 dark:divide-dark-neutral-700">
-              {appliedJobs.map((job, idx) => (
-                <tr key={job.id}>
-                  <td className="px-6 py-4 flex items-center">
-                    <img src={`/company-logos/${job.logo}.png`} alt={job.title} className="h-8 w-8 rounded-full mr-3" onError={e => {e.target.onerror=null; e.target.src='https://ui-avatars.com/api/?name='+job.company+'&background=random&color=fff';}} />
-                    <div>
-                      <div className="font-medium text-light-text-primary dark:text-dark-text-primary">{job.title}</div>
-                      <div className="text-xs text-light-text-secondary dark:text-dark-text-secondary">{job.location}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-light-text-primary dark:text-dark-text-primary">{generateRandomAppliedDate()}</td>
-                  <td className="px-6 py-4 text-green-600 dark:text-green-400">Active</td>
-                  <td className="px-6 py-4">
-                    <Link to={`/jobseeker/job-details/${job.id}`} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">View Details</Link>
-                  </td>
+
+        {isLoading ? (
+          <Loader />
+        ) : appliedJobs.length === 0 ? (
+          <div className="p-8 text-center text-light-text-secondary dark:text-dark-text-secondary">
+            You haven't applied to any jobs yet
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-light-neutral-200 dark:divide-dark-neutral-700">
+              <thead className="bg-light-neutral-50 dark:bg-dark-neutral-700">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider">Job Details</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider">Posted</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider">Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="bg-white dark:bg-dark-neutral-800 divide-y divide-light-neutral-200 dark:divide-dark-neutral-700">
+                {appliedJobs.slice(0, 5).map((job) => (
+                  <tr key={job.id} className="hover:bg-light-neutral-50 dark:hover:bg-dark-neutral-700 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 rounded-lg mr-4 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500">
+                          {job.employer?.companyName?.[0]?.toUpperCase() || 'C'}
+                        </div>
+                        <div>
+                          <div className="font-medium text-light-text-primary dark:text-dark-text-primary">{job.title}</div>
+                          <div className="text-sm text-light-text-secondary dark:text-dark-text-secondary">
+                            {job.employer?.companyName || 'Company'} • {job.location}
+                          </div>
+                          <div className="mt-1 flex items-center gap-2">
+                            <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full dark:bg-blue-900 dark:text-blue-200">
+                              {job.jobType}
+                            </span>
+                            {job.shortListed && (
+                              <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full dark:bg-green-900 dark:text-green-200">
+                                Shortlisted
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-light-text-secondary dark:text-dark-text-secondary">
+                      {job.postedDate}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                        {job.status || 'Active'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <Link
+                        to={`/jobseeker/job-details/${job.id}`}
+                        className="inline-flex items-center px-4 py-2 bg-light-primary-600 dark:bg-dark-primary-400 text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-medium"
+                      >
+                        View Details
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

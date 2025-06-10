@@ -1,9 +1,6 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import {
-  FaBirthdayCake,
-  FaFlag,
-  FaHeart,
-  FaVenusMars,
   FaBriefcase,
   FaGraduationCap,
   FaMapMarkerAlt,
@@ -12,14 +9,21 @@ import {
   FaFileAlt,
   FaDownload,
   FaEnvelope,
-  FaFacebookF,
-  FaTwitter,
-  FaLinkedinIn,
-  FaRedditAlien,
-  FaInstagram,
+  FaCalendarAlt,
+  FaClock,
+  FaSpinner,
+  FaExclamationTriangle,
+  FaUser,
+  FaTimes,
+  FaUserTimes,
 } from 'react-icons/fa';
+import { format, parseISO, isValid } from 'date-fns';
+import { hireCandidate, rejectCandidate } from '../api/employerApi';
+import { toast } from 'react-hot-toast';
 
-const CandidateModal = ({ candidate, onClose }) => {
+const CandidateModal = ({ candidate, onClose, jobId, onCandidateAction }) => {
+  const [actionLoading, setActionLoading] = React.useState({ hire: false, reject: false });
+
   if (!candidate) return null;
 
   const handleBackgroundClick = (e) => {
@@ -28,228 +32,384 @@ const CandidateModal = ({ candidate, onClose }) => {
     }
   };
 
-  return (
-    <div
-      className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center"
-      onClick={handleBackgroundClick}
-    >
-      {/* Outer container with max height and overflow for smaller screens */}
-      <div className="relative w-full sm:max-w-lg md:max-w-3xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900 border dark:border-gray-700 rounded shadow-lg">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between p-4 border-b">
-          <div>
-            <h2 className="text-xl font-bold text-gray-800 dark:text-dark-text-primary">
-              {candidate.name}
-            </h2>
-            {/* Title under the name */}
-            {candidate.title && (
-              <p className="text-sm text-gray-500">{candidate.title}</p>
-            )}
-          </div>
-          <div className="flex items-center space-x-2 mt-3 me-12 md:mt-0">
-            {/* Save Candidate */}
-            <button className="flex items-center px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600">
-              <FaSave className="mr-2" />
-              Save Candidate
-            </button>
-            {/* Hire Candidate */}
-            <button className="flex items-center px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600">
-              <FaUserCheck className="mr-2" />
-              Hire
-            </button>
-            <button
-              onClick={onClose}
-              className="absolute top-2 right-2 w-10 h-10 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center text-red-600 dark:text-gray-100 text-4xl"
-            >
-              &times;
-            </button>
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = parseISO(dateString);
+      if (isValid(date)) {
+        return format(date, 'MMM d, yyyy');
+      }
+      return dateString;
+    } catch (error) {
+      return dateString;
+    }
+  };
 
-          </div>
-        </div>
+  const handleDownloadResume = (resumePath, resumeName) => {
+    window.open(resumePath, '_blank');
+  };
 
-        {/* Body */}
-        <div className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Left side: Biography & Cover Letter */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-dark-text-primary mb-2">
-              Biography
-            </h3>
-            <p className="text-sm text-gray-700 dark:text-dark-text-primary mb-6">
-              {candidate.biography}
-            </p>
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-dark-text-primary mb-2">
-              Cover Letter
-            </h3>
-            <p className="text-sm text-gray-700 dark:text-dark-text-primary">
-              {candidate.coverLetter}
-            </p>
-          </div>
+  const handleDownloadAllResumes = () => {
+    if (candidate.resumes && candidate.resumes.length > 0) {
+      candidate.resumes.forEach((resume, index) => {
+        setTimeout(() => {
+          window.open(resume.resumePath, '_blank');
+        }, index * 500);
+      });
+    } else if (candidate.resumeBase64) {
+      window.open(candidate.resumeBase64, '_blank');
+    }
+  };
 
-          {/* Right side: Personal Info, Download Resume, Contact Info */}
-          <div className="flex flex-col space-y-4">
-            {/* Personal Info */}
-            <div className="p-4 border rounded shadow-md hover:shadow-lg transition duration-200">
-              <h4 className="text-md font-semibold text-gray-800 dark:text-dark-text-primary mb-3">
-                Personal Information
-              </h4>
-              {/* Nationality */}
-              {candidate.nationality && (
-                <div className="flex items-center text-sm text-gray-700 dark:text-dark-text-primary mb-2">
-                  <FaFlag className="mr-2 text-gray-500" />
-                  {candidate.nationality}
-                </div>
-              )}
-              {/* Date of Birth */}
-              {candidate.dateOfBirth && (
-                <div className="flex items-center text-sm text-gray-700 dark:text-dark-text-primary mb-2">
-                  <FaBirthdayCake className="mr-2 text-gray-500" />
-                  {candidate.dateOfBirth}
-                </div>
-              )}
-              {/* Gender */}
-              {candidate.gender && (
-                <div className="flex items-center text-sm text-gray-700 dark:text-dark-text-primary mb-2">
-                  <FaVenusMars className="mr-2 text-gray-500" />
-                  {candidate.gender}
-                </div>
-              )}
-              {/* Marital Status */}
-              {candidate.maritalStatus && (
-                <div className="flex items-center text-sm text-gray-700 dark:text-dark-text-primary mb-2">
-                  <FaHeart className="mr-2 text-gray-500" />
-                  {candidate.maritalStatus}
-                </div>
-              )}
-              {/* Experience */}
-              {candidate.experience && (
-                <div className="flex items-center text-sm text-gray-700 dark:text-dark-text-primary mb-2">
-                  <FaBriefcase className="mr-2 text-gray-500" />
-                  {candidate.experience}
-                </div>
-              )}
-              {/* Education */}
-              {candidate.education && (
-                <div className="flex items-center text-sm text-gray-700 dark:text-dark-text-primary mb-2">
-                  <FaGraduationCap className="mr-2 text-gray-500" />
-                  {candidate.education}
-                </div>
-              )}
-              {/* Location */}
-              {candidate.contact?.location && (
-                <div className="flex items-center text-sm text-gray-700 dark:text-dark-text-primary">
-                  <FaMapMarkerAlt className="mr-2 text-gray-500" />
-                  {candidate.contact.location}
-                </div>
-              )}
-            </div>
+  const handleHireCandidate = async () => {
+    if (!jobId || !candidate.id) {
+      toast.error('Missing required information to hire candidate');
+      return;
+    }
 
-            {/* Download Resume Card */}
-            <div className="border rounded-lg p-4 shadow-md hover:shadow-lg transition duration-200 flex items-center justify-between">
+    setActionLoading(prev => ({ ...prev, hire: true }));
+    
+    try {
+      const result = await hireCandidate(jobId, candidate.id);
+      
+      if (result.success) {
+        toast.success(`${candidate.name} has been hired successfully!`);
+        if (onCandidateAction) {
+          onCandidateAction('hired', candidate.id);
+        }
+        onClose();
+      } else {
+        toast.error(result.error || 'Failed to hire candidate');
+      }
+    } catch (error) {
+      console.error('Error hiring candidate:', error);
+      toast.error('An unexpected error occurred while hiring the candidate');
+    } finally {
+      setActionLoading(prev => ({ ...prev, hire: false }));
+    }
+  };
+
+  const handleRejectCandidate = async () => {
+    if (!jobId || !candidate.id) {
+      toast.error('Missing required information to reject candidate');
+      return;
+    }
+
+    setActionLoading(prev => ({ ...prev, reject: true }));
+    
+    try {
+      const result = await rejectCandidate(jobId, candidate.id);
+      
+      if (result.success) {
+        toast.success(`${candidate.name} has been rejected`);
+        if (onCandidateAction) {
+          onCandidateAction('rejected', candidate.id);
+        }
+        onClose();
+      } else {
+        toast.error(result.error || 'Failed to reject candidate');
+      }
+    } catch (error) {
+      console.error('Error rejecting candidate:', error);
+      toast.error('An unexpected error occurred while rejecting the candidate');
+    } finally {
+      setActionLoading(prev => ({ ...prev, reject: false }));
+    }
+  };
+
+  const modalContent = (
+    <>
+      <style>
+        {`
+          .candidate-modal-overlay {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            z-index: 999999 !important;
+            background-color: rgba(0, 0, 0, 0.5) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 1rem !important;
+          }
+        `}
+      </style>
+      <div
+        className="candidate-modal-overlay"
+        onClick={handleBackgroundClick}
+      >
+        <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900 rounded-xl shadow-2xl">
+          {/* Header */}
+          <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between rounded-t-xl">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/40 rounded-full flex items-center justify-center">
+                <FaUser className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              </div>
               <div>
-                <h5 className="text-lg font-bold text-gray-800 dark:text-white mb-2">
-                  Download My Resume
-                </h5>
-                <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
-                  <FaFileAlt className="text-gray-500" />
-                  <span>{candidate.name}</span>
-                  <span className="px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded">
-                    PDF
-                  </span>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {candidate.name}
+                </h2>
+                <div className="flex items-center gap-3">
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {candidate.currentOrDesiredJob || 'Job Seeker'}
+                  </p>
+                  {candidate.status && (
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      candidate.status.toLowerCase() === 'accepted' 
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                        : candidate.status.toLowerCase() === 'rejected'
+                        ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                        : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400'
+                    }`}>
+                      {candidate.status}
+                    </span>
+                  )}
                 </div>
               </div>
-              <button className="bg-blue-500 text-white p-3 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
-                <FaDownload />
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              {/* Only show hire/reject buttons if candidate is not already accepted or rejected */}
+              {(!candidate.status || (candidate.status.toLowerCase() !== 'accepted' && candidate.status.toLowerCase() !== 'rejected')) ? (
+                <>
+                  <button 
+                    onClick={handleHireCandidate}
+                    disabled={actionLoading.hire || actionLoading.reject}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed"
+                  >
+                    {actionLoading.hire ? (
+                      <FaSpinner className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <FaUserCheck className="w-4 h-4" />
+                    )}
+                    {actionLoading.hire ? 'Hiring...' : 'Hire'}
+                  </button>
+                  
+                  <button 
+                    onClick={handleRejectCandidate}
+                    disabled={actionLoading.hire || actionLoading.reject}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed"
+                  >
+                    {actionLoading.reject ? (
+                      <FaSpinner className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <FaUserTimes className="w-4 h-4" />
+                    )}
+                    {actionLoading.reject ? 'Rejecting...' : 'Reject'}
+                  </button>
+                </>
+              ) : (
+                <div className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                  candidate.status.toLowerCase() === 'accepted'
+                    ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                    : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                }`}>
+                  Candidate {candidate.status}
+                </div>
+              )}
+              
+              <button
+                onClick={onClose}
+                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                <FaTimes className="w-5 h-5" />
               </button>
             </div>
-
-            {/* Contact Info */}
-            <div className="p-4 border rounded shadow-md hover:shadow-lg transition duration-200">
-              <h4 className="text-md font-semibold text-gray-800 dark:text-dark-text-primary mb-3">
-                Contact Information
-              </h4>
-              {/* Email */}
-              {candidate.contact?.email && (
-                <div className="mb-2 text-sm">
-                  <span className="font-medium text-gray-600">Email: </span>
-                  <span className="text-gray-700 dark:text-dark-text-primary">
-                    {candidate.contact.email}
-                  </span>
-                </div>
-              )}
-              {/* Phone */}
-              {candidate.contact?.phone && (
-                <div className="mb-2 text-sm">
-                  <span className="font-medium text-gray-600">Phone: </span>
-                  <span className="text-gray-700 dark:text-dark-text-primary">
-                    {candidate.contact.phone}
-                  </span>
-                </div>
-              )}
-              {/* Secondary Phone (if any) */}
-              {candidate.contact?.secondaryPhone && (
-                <div className="mb-2 text-sm">
-                  <span className="font-medium text-gray-600">
-                    Secondary Phone:{' '}
-                  </span>
-                  <span className="text-gray-700 dark:text-dark-text-primary">
-                    {candidate.contact.secondaryPhone}
-                  </span>
-                </div>
-              )}
-              {/* Website */}
-              {candidate.contact?.website && (
-                <div className="text-sm">
-                  <span className="font-medium text-gray-600">Website: </span>
-                  <span className="text-gray-700 dark:text-dark-text-primary">
-                    {candidate.contact.website}
-                  </span>
-                </div>
-              )}
-            </div>
           </div>
-        </div>
 
-        {/* Footer: Social Media Links */}
-        <div className="px-4 pb-4">
-          <h5 className="text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-2">
-            Follow me Social Media
-          </h5>
-          <div className="flex space-x-3">
-            <a
-              href="#"
-              className="p-2 bg-blue-100 rounded text-blue-600 hover:bg-blue-200"
-            >
-              <FaFacebookF />
-            </a>
-            <a
-              href="#"
-              className="p-2 bg-blue-100 rounded text-blue-400 hover:bg-blue-200"
-            >
-              <FaTwitter />
-            </a>
-            <a
-              href="#"
-              className="p-2 bg-blue-100 rounded text-blue-700 hover:bg-blue-200"
-            >
-              <FaLinkedinIn />
-            </a>
-            <a
-              href="#"
-              className="p-2 bg-blue-100 rounded text-orange-500 hover:bg-orange-100"
-            >
-              <FaRedditAlien />
-            </a>
-            <a
-              href="#"
-              className="p-2 bg-blue-100 rounded text-pink-500 hover:bg-pink-100"
-            >
-              <FaInstagram />
-            </a>
+          {/* Loading State */}
+          {candidate.loadingDetails && (
+            <div className="px-6 py-4 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
+              <div className="flex items-center gap-3 text-blue-600 dark:text-blue-400">
+                <FaSpinner className="w-4 h-4 animate-spin" />
+                <span className="text-sm">Loading detailed candidate information...</span>
+              </div>
+            </div>
+          )}
+
+          {/* Error State */}
+          {candidate.fetchError && (
+            <div className="px-6 py-4 bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800">
+              <div className="flex items-center gap-3 text-yellow-600 dark:text-yellow-400">
+                <FaExclamationTriangle className="w-4 h-4" />
+                <span className="text-sm">Some detailed information couldn't be loaded, showing basic details.</span>
+              </div>
+            </div>
+          )}
+
+          {/* Body */}
+          <div className="p-6 space-y-6">
+            {/* Basic Information Row */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <FaEnvelope className="w-4 h-4 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Email</span>
+                </div>
+                <p className="text-gray-900 dark:text-white font-medium">{candidate.email}</p>
+              </div>
+              
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <FaBriefcase className="w-4 h-4 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Experience</span>
+                </div>
+                <p className="text-gray-900 dark:text-white font-medium">
+                  {candidate.yearsOfExperience ? `${candidate.yearsOfExperience} years` : 'Not specified'}
+                </p>
+              </div>
+              
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <FaCalendarAlt className="w-4 h-4 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Applied</span>
+                </div>
+                <p className="text-gray-900 dark:text-white font-medium">
+                  {formatDate(candidate.applicationDate)}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Left Column */}
+              <div className="space-y-6">
+                {/* Cover Letter */}
+                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <FaFileAlt className="w-5 h-5 text-blue-600" />
+                    Cover Letter
+                  </h3>
+                  <div className="prose dark:prose-invert max-w-none">
+                    {candidate.coverLetter ? (
+                      <p className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+                        {candidate.coverLetter}
+                      </p>
+                    ) : (
+                      <p className="text-gray-500 dark:text-gray-400 italic">
+                        No cover letter provided
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Additional Details from API */}
+                {candidate.detailedInfo && (
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                      Additional Information
+                    </h3>
+                    <div className="space-y-3">
+                      {candidate.detailedInfo.address && (
+                        <div className="flex items-start gap-3">
+                          <FaMapMarkerAlt className="w-4 h-4 text-gray-500 mt-1" />
+                          <div>
+                            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Address</span>
+                            <p className="text-gray-900 dark:text-white">{candidate.detailedInfo.address}</p>
+                          </div>
+                        </div>
+                      )}
+                      {candidate.detailedInfo.phoneNumber && (
+                        <div className="flex items-start gap-3">
+                          <FaEnvelope className="w-4 h-4 text-gray-500 mt-1" />
+                          <div>
+                            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Phone</span>
+                            <p className="text-gray-900 dark:text-white">{candidate.detailedInfo.phoneNumber}</p>
+                          </div>
+                        </div>
+                      )}
+                      {candidate.detailedInfo.degree && (
+                        <div className="flex items-start gap-3">
+                          <FaGraduationCap className="w-4 h-4 text-gray-500 mt-1" />
+                          <div>
+                            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Education</span>
+                            <p className="text-gray-900 dark:text-white">{candidate.detailedInfo.degree}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column */}
+              <div className="space-y-6">
+                {/* Resume Downloads */}
+                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <FaDownload className="w-5 h-5 text-green-600" />
+                    Resume
+                  </h3>
+                  
+                  {(candidate.resume || candidate.resumeBase64) ? (
+                    <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <FaFileAlt className="w-4 h-4 text-red-500" />
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white text-sm">
+                            {candidate.resumeName || 'Resume'}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            PDF Document
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => window.open(candidate.resume || candidate.resumeBase64, '_blank')}
+                        className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                        title="Download Resume"
+                      >
+                        <FaDownload className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 dark:text-gray-400 italic text-center py-4">
+                      No resume available
+                    </p>
+                  )}
+                </div>
+
+                {/* Application Timeline */}
+                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <FaClock className="w-5 h-5 text-purple-600" />
+                    Application Status
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                      <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white text-sm">Application Submitted</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {formatDate(candidate.applicationDate)}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {candidate.isShortlisted && (
+                      <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white text-sm">Shortlisted</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            Candidate has been shortlisted for review
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
+
+  // Render the modal using a portal to the document body
+  return createPortal(modalContent, document.body);
 };
 
 export default CandidateModal;

@@ -42,7 +42,9 @@ const EmployerRegister = () => {
       firstName: Yup.string().required('First name is required'),
       lastName: Yup.string().required('Last name is required'),
       email: Yup.string().email('Invalid email address').required('Email is required'),
-      phoneNumber: Yup.string().required('Phone number is required'),
+      phoneNumber: Yup.string()
+        .required('Phone number is required')
+        .matches(/^[0-9\-\+\(\)\s]+$/, 'Please enter a valid phone number'),
       password: Yup.string()
         .min(6, 'Password must be at least 6 characters')
         .matches(
@@ -60,40 +62,41 @@ const EmployerRegister = () => {
     onSubmit: async (values) => {
       try {
         setRegistrationError('');
-        
-        // Show loading toast
         const loadingToast = toast.loading('Creating your employer account...');
         
-        // Call the API with the form values
-        const userData = await registerEmployer(values);
-        
-        // Dismiss loading toast
+        const response = await registerEmployer(values);
         toast.dismiss(loadingToast);
-        
-        // Store user data and token
-        if (userData && userData.token) {
-          localStorage.setItem('token', userData.token);
-          localStorage.setItem('user', JSON.stringify(userData));
+
+        if (response.success && response.data) {
+          // Store only necessary data in localStorage
+          localStorage.setItem('token', response.token);
           
-          // **Update the AuthContext with the new user data**
-          login(userData);
+          // Store minimal user info
+          const userInfo = {
+            firstName: response.user.firstName,
+            lastName: response.user.lastName,
+            email: response.user.email,
+            role: response.user.role
+          };
+          localStorage.setItem('user', JSON.stringify(userInfo));
           
-          // Clear saved progress on success
+          // Update AuthContext
+          login(userInfo);
+          
+          // Clear saved form progress
           localStorage.removeItem('employerForm');
           
-          // Show success toast
           toast.success('Registration successful! Redirecting to dashboard...');
-          
-          // Navigate to the dashboard
           navigate('/employer');
         } else {
-          setRegistrationError('Registration failed. Please try again.');
-          toast.error('Registration failed. Please try again.');
+          setRegistrationError(response.error || 'Registration failed. Please try again.');
+          toast.error(response.error || 'Registration failed. Please try again.');
         }
       } catch (error) {
-        console.error('Registration failed:', error);
-        setRegistrationError(error.message || 'Registration failed. Please try again.');
-        toast.error(error.message || 'Registration failed. Please try again.');
+        console.error('Registration error:', error);
+        const errorMessage = error.message || 'An unexpected error occurred. Please try again.';
+        setRegistrationError(errorMessage);
+        toast.error(errorMessage);
       }
     },
   });

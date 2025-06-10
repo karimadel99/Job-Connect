@@ -59,7 +59,13 @@ const Navbar = () => {
                 {user.role === 'employer' && (
                   <>
                     <Link to="/employer/dashboard" className="hover:text-light-primary-600 dark:hover:text-dark-primary-500">Dashboard</Link>
-                    <button onClick={handleLogout} className="hover:text-light-primary-600 dark:hover:text-dark-primary-500">Logout</button>
+                    <button onClick={handleLogout} className="hover:bg-red-700 bg-red-500 hover:text-white px-4 py-2  md:w-1/2 w-1/6 rounded-md">Logout</button>
+                  </>
+                )}
+                {user.role === 'admin' && (
+                  <>
+                    <Link to="/admin/dashboard" className="hover:text-light-primary-600 dark:hover:text-dark-primary-500">Dashboard</Link>
+                    <button onClick={handleLogout} className="hover:bg-red-700 bg-red-500 hover:text-white px-4 py-2  md:w-1/2 w-1/6 rounded-md">Logout</button>
                   </>
                 )}
                 <DarkModeToggle />
@@ -92,6 +98,7 @@ const Navbar = () => {
                 <>
                   <Link to="/jobseeker/find-jobs" onClick={() => setIsMenuOpen(false)} className="block py-2">Find Jobs</Link>
                   <Link to="/jobseeker/find-employers" onClick={() => setIsMenuOpen(false)} className="block py-2">Find Employers</Link>
+                  
                   <div className="border-t mt-2 pt-2">
                     <p className="text-sm font-semibold text-light-text-secondary dark:text-dark-text-secondary">Dashboard</p>
                     {dashboardLinks.map(({ name, href, icon: Icon }) => (
@@ -101,6 +108,8 @@ const Navbar = () => {
                       </Link>
                     ))}
                   </div>
+                  <button onClick={handleLogout} className="block  text-left hover:bg-red-700 bg-red-500 hover:text-white px-4 py-2  md:w-1/2 w-1/4 rounded-md">Logout</button>
+
                 </>
               )}
               {user.role === 'employer' && (
@@ -109,7 +118,7 @@ const Navbar = () => {
                   <Link to="/employer/post-job" onClick={() => setIsMenuOpen(false)} className="block py-2">Post a Job</Link>
                   <Link to="/employer/my-jobs" onClick={() => setIsMenuOpen(false)} className="block py-2">My Jobs</Link>
                   <Link to="/employer/settings" onClick={() => setIsMenuOpen(false)} className="block py-2">Settings</Link>
-                  <button onClick={handleLogout} className="block w-full text-left py-2">Logout</button>
+                  <button onClick={handleLogout} className="block  text-left hover:bg-red-700 bg-red-500 hover:text-white px-4 py-2  md:w-1/2 w-1/6 rounded-md">Logout</button>
                 </>
               )}
             </>

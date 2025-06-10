@@ -37,7 +37,7 @@ const ResponsibilitiesList = ({ field, form }) => {
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleInputKeyDown}
           placeholder="Add a responsibility and press Enter"
-          className="flex-grow px-4 py-2 border rounded-l-md focus:outline-none text-light-text-primary dark:text-dark-text-primary focus:ring-2 focus:ring-light-primary-500 dark:focus:ring-dark-primary-500"
+          className="flex-grow px-4 py-2 border rounded-l-md focus:outline-none bg-white dark:bg-dark-neutral-700 text-light-text-primary dark:text-dark-text-primary focus:ring-2 focus:ring-light-primary-500 dark:focus:ring-dark-primary-500"
         />
         <button
           type="button"

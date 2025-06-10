@@ -2,7 +2,7 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { toast } from 'react-hot-toast';
 import { useParams, useNavigate } from 'react-router-dom';
 import { updateJob, getJobById } from '../../api/employerApi'; 
-const JobForm = lazy(() => import('../../components/employer/JobFormComponents/JobForm'));
+const JobFormWizard = lazy(() => import('../../components/employer/JobFormComponents/JobFormWizard'));
 const Loader = lazy(() => import('../../components/Loader'));
 
 export default function EditJobPage() {
@@ -73,9 +73,9 @@ export default function EditJobPage() {
   }
   return (
     <div>
-      <h2 className="text-3xl font-bold mb-8 text-center">Edit Job</h2>
+      <h2 className="text-3xl text-light-text-primary dark:text-dark-text-primary font-bold mb-8 text-center">Edit Job</h2>
       <Suspense fallback={<div>Loading form...</div>}>
-        <JobForm job={job} onSubmit={handleSubmit} submitButtonText="Update Job" />
+        <JobFormWizard job={job} onSubmit={handleSubmit} submitButtonText="Update Job" />
       </Suspense>
     </div>
   );

@@ -1,7 +1,7 @@
 import React from 'react';
 import { toast } from 'react-hot-toast';
 import { postJob } from '../../api/employerApi';
-import JobForm from '../../components/employer/JobFormComponents/JobForm';
+import JobFormWizard from '../../components/employer/JobFormComponents/JobFormWizard';
 
 function PostJobPage() {
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
@@ -29,8 +29,8 @@ function PostJobPage() {
 
   return (
     <div>
-      <h2 className="text-3xl font-bold mb-8 text-center">Post a Job</h2>
-      <JobForm onSubmit={handleSubmit} submitButtonText="Post Job" />
+      <h2 className="text-3xl text-light-text-primary dark:text-dark-text-primary font-bold mb-8 text-center">Post a Job</h2>
+      <JobFormWizard onSubmit={handleSubmit} submitButtonText="Post Job" />
     </div>
   );
 }

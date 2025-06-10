@@ -50,4 +50,13 @@ export const getJobsByTag = (tag) =>
     .catch(error => {
       console.error('Error fetching jobs by tag:', error);
       throw error;
-    }); 
+    });
+
+// Get all messages/contact form submissions
+export const getMessages = () => 
+  api.get('/api/Home/GetAllMessages')
+    .then(handleResponse)
+    .catch(error => {
+      console.error('Error fetching messages:', error);
+      throw error;
+    });

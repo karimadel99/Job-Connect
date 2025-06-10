@@ -1,21 +1,15 @@
 // src/components/jobseeker/JobSeekerPersonalInfo.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import PasswordInput from '../public/PasswordInput';
+import PhoneInput from '../public/PhoneInput';
 
 const JobSeekerPersonalInfo = ({ 
   formik, 
   showPassword, 
   setShowPassword, 
   handleNext, 
-  handleClearProgress,
-  phoneDropdownRef,
-  isDropdownOpen,
-  toggleDropdown,
-  selectedCountry,
-  selectCountry,
-  countries
+  handleClearProgress
 }) => {
   return (
     <>
@@ -83,52 +77,18 @@ const JobSeekerPersonalInfo = ({
         <label htmlFor="phoneNumber" className="block text-gray-800 dark:text-gray-200 mb-2">
           Phone Number
         </label>
-        <div className="relative" ref={phoneDropdownRef}>
-          <div className="flex">
-            <button 
-              type="button"
-              onClick={toggleDropdown}
-              className="shrink-0 z-10 inline-flex items-center py-2.5 px-4 text-sm font-medium text-center text-[#312E81] dark:text-[#E0E7FF] bg-[#EEF2FF] dark:bg-[#413f84] border-t-0 border-b-0 border-[#1E1B4B] dark:border-[#EEF2FF] rounded-l-lg h-11"
-            >
-              <span className="mr-2">{selectedCountry.flag}</span>
-              {selectedCountry.dialCode}
-              <svg className="w-2.5 h-2.5 ml-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 4 4 4-4" />
-              </svg>
-            </button>
-            <input 
-              type="tel"
-              name="phoneNumber"
-              id="phoneNumber"
-              placeholder="123-456-7890"
-              value={formik.values.phoneNumber}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              className="block p-2.5 w-full z-20 text-[#312E81] dark:text-[#E0E7FF] bg-[#EEF2FF] dark:bg-[#413f84] border-t-0 border-b-0 border-[#1E1B4B] dark:border-[#EEF2FF] rounded-r-lg focus:ring-2 focus:outline-none focus:ring-[#312E81] h-11"
-            />
-          </div>
-          {isDropdownOpen && (
-            <div className="absolute top-full left-0 z-20 bg-white dark:bg-[#2D2B63] divide-y divide-gray-100 dark:divide-gray-700 rounded-lg shadow-lg w-64 max-h-60 overflow-y-auto">
-              <ul className="py-2 text-sm text-[#312E81] dark:text-[#E0E7FF]">
-                {countries.map((country, index) => (
-                  <li key={index}>
-                    <button 
-                      type="button"
-                      onClick={() => selectCountry(country)}
-                      className="w-full text-left px-4 py-2 hover:bg-[#EEF2FF] dark:hover:bg-[#413f84]"
-                    >
-                      <span className="mr-2">{country.flag}</span>
-                      {country.name} ({country.dialCode})
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-        {formik.touched.phoneNumber && formik.errors.phoneNumber && (
-          <p className="mt-1 text-sm text-red-600">{formik.errors.phoneNumber}</p>
-        )}
+        <PhoneInput
+          name="phoneNumber"
+          value={formik.values.phoneNumber}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          error={formik.errors.phoneNumber}
+          touched={formik.touched.phoneNumber}
+          buttonClassName="shrink-0 z-10 inline-flex items-center py-2.5 px-4 text-sm font-medium text-center text-[#312E81] dark:text-[#E0E7FF] bg-[#EEF2FF] dark:bg-[#413f84] border-t-0 border-b-0 border-[#1E1B4B] dark:border-[#EEF2FF] rounded-l-lg h-11"
+          inputClassName="block p-2.5 w-full z-20 text-[#312E81] dark:text-[#E0E7FF] bg-[#EEF2FF] dark:bg-[#413f84] border-t-0 border-b-0 border-[#1E1B4B] dark:border-[#EEF2FF] rounded-r-lg focus:ring-2 focus:outline-none focus:ring-[#312E81] h-11"
+          dropdownClassName="absolute top-full left-0 z-20 bg-white dark:bg-[#2D2B63] divide-y divide-gray-100 dark:divide-gray-700 rounded-lg shadow-lg w-64 max-h-60 overflow-y-auto"
+          errorClassName="mt-1 text-sm text-red-600"
+        />
       </div>
 
       {/* Password with Eye Toggle */}
@@ -137,7 +97,6 @@ const JobSeekerPersonalInfo = ({
         showPassword={showPassword}
         setShowPassword={setShowPassword}
       />
-
 
       {/* Address */}
       <div className="mb-4">

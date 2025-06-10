@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaCheckCircle, FaUsers, FaEllipsisV, FaTimesCircle } from 'react-icons/fa';
+import { FiCheckCircle, FiUsers, FiMoreVertical, FiXCircle, FiEdit3, FiTrash2, FiEye, FiClock, FiCalendar, FiBriefcase } from 'react-icons/fi';
 import { deleteJob } from '../../api/employerApi';
 import { toast } from 'react-hot-toast';
 
@@ -12,7 +12,8 @@ const JobRow = ({ job, onDelete }) => {
     applicationsCount,
     jobType,
     daysRemaining,
-    postedDate
+    postedDate,
+    expirationDate
   } = job;
 
   const navigate = useNavigate();
@@ -31,8 +32,25 @@ const JobRow = ({ job, onDelete }) => {
     };
   }, []);
 
-  const isActive = status.toLowerCase() === 'active';
-  const isExpired = status.toLowerCase() === 'expired';
+  // Determine if job is expired based on daysRemaining or expirationDate
+  const isExpired = daysRemaining <= 0 || 
+                   (expirationDate && new Date(expirationDate) < new Date());
+  const isActive = !isExpired;
+
+  // Determine display status
+  const displayStatus = isExpired ? 'Expired' : 'Active';
+
+  // Helper function to format job type
+  const formatJobType = (type) => {
+    const typeMap = {
+      'fullTime': 'Full Time',
+      'partTime': 'Part Time',
+      'contract': 'Contract',
+      'internship': 'Internship',
+      'temporary': 'Temporary'
+    };
+    return typeMap[type] || type;
+  };
 
   const handleDeleteJob = async () => {
     try {
@@ -40,7 +58,7 @@ const JobRow = ({ job, onDelete }) => {
       if (result.success) {
         toast.success('Job deleted successfully');
         if (typeof onDelete === 'function') {
-          onDelete(id); // Notify parent to remove the job from list
+          onDelete(id);
         }
       } else {
         toast.error(result.error || 'Failed to delete job');
@@ -49,88 +67,120 @@ const JobRow = ({ job, onDelete }) => {
       console.error('Error deleting job:', error);
       toast.error('An unexpected error occurred');
     }
+    setIsMenuOpen(false);
   };
 
-  // Add this function to handle navigation
-  const handleViewApplications = () => {
+  const handleViewApplications = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     navigate(`/employer/my-jobs/${id}/applications`);
   };
 
+  const handleEditJob = () => {
+    navigate(`/employer/edit-job/${id}`);
+    setIsMenuOpen(false);
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-6 p-4 border-b border-light-neutral-200 dark:border-dark-neutral-700 items-center hover:bg-light-primary-50 dark:hover:bg-dark-primary-100/20 transition-colors">
-      {/* Job Info */}
-      <div className="md:col-span-2">
-        <h3 className="text-light-text-primary dark:text-dark-text-primary font-medium">{title}</h3>
-        <p className="text-sm text-light-text-secondary dark:text-dark-text-secondary mt-1">
-          {jobType} &bull; {daysRemaining > 0 ? <span className="font-medium">{daysRemaining} days remaining</span> : <span className="text-light-error-DEFAULT dark:text-dark-error-DEFAULT">Expired</span>} &bull; Posted {postedDate}
-        </p>
-      </div>
-
-      {/* Status */}
-      <div className="flex items-center my-2 md:my-0">
-        {isActive && <FaCheckCircle className="text-light-success-DEFAULT dark:text-dark-success-DEFAULT mr-1" />}
-        {isExpired && <FaTimesCircle className="text-light-error-DEFAULT dark:text-dark-error-DEFAULT mr-1" />}
-        <span className={`text-sm font-medium ${
-          isActive 
-            ? 'text-light-success-DEFAULT dark:text-dark-success-DEFAULT' 
-            : isExpired 
-              ? 'text-light-error-DEFAULT dark:text-dark-error-DEFAULT' 
-              : 'text-light-text-primary dark:text-dark-text-secondary'
-        }`}>
-          {status}
-        </span>
-      </div>
-
-      {/* Applications count */}
-      <div className="flex items-center my-2 md:my-0">
-        <FaUsers className="text-light-primary-500 dark:text-dark-primary-400 mr-1" />
-        <span className="text-sm text-light-text-primary dark:text-dark-text-primary">
-          <span className="font-medium">{applicationsCount}</span> {applicationsCount === 1 ? 'Application' : 'Applications'}
-        </span>
-      </div>
-
-      {/* View Applications Button */}
-      <div className="my-2 md:my-0">
-        <button 
-          onClick={handleViewApplications}
-          className="px-4 py-2 text-sm font-medium rounded-md bg-light-primary-600 hover:bg-light-primary-700 text-light-text-inverse dark:bg-dark-primary-600 dark:hover:bg-dark-primary-700 dark:text-dark-text-inverse transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-light-primary-500 dark:focus:ring-dark-primary-500"
-        >
-          View Applications
-        </button>
-      </div>
-
-      {/* Actions Button */}
-      <div className="relative flex justify-end" ref={menuRef}>
-        <button 
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="p-2 rounded-full hover:bg-light-neutral-100 dark:hover:bg-dark-neutral-700 text-light-text-secondary dark:text-dark-text-secondary transition-colors"
-          aria-label="Job actions menu"
-        >
-          <FaEllipsisV />
-        </button>
-        
-        {isMenuOpen && (
-          <div className="absolute right-0 top-full mt-1 w-48 bg-light-background-primary dark:bg-dark-background-secondary rounded-md shadow-lg z-10 border border-light-neutral-200 dark:border-dark-neutral-700">
-            <ul className="py-1">
-              <li>
-                <button 
-                  onClick={() => navigate(`/employer/edit-job/${id}`)}
-                  className="block w-full text-left px-4 py-2 text-sm text-light-text-primary dark:text-dark-text-primary hover:bg-light-neutral-100 dark:hover:bg-dark-neutral-700 transition-colors"
-                >
-                  Edit Job
-                </button>
-              </li> 
-              <li>
-                <button 
-                  onClick={handleDeleteJob}
-                  className="block w-full text-left px-4 py-2 text-sm text-light-error-DEFAULT dark:text-dark-error-DEFAULT hover:bg-light-neutral-100 dark:hover:bg-dark-neutral-700 transition-colors"
-                >
-                  Delete Job
-                </button>
-              </li>
-            </ul>
+    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 border border-gray-200 dark:border-gray-600">
+      <div className="flex flex-col gap-4">
+        {/* Job Info */}
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            {title}
+          </h3>
+          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+            <span className="flex items-center gap-1">
+              <FiBriefcase className="w-4 h-4" />
+              {formatJobType(jobType)}
+            </span>
+            <span className="flex items-center gap-1">
+              <FiCalendar className="w-4 h-4" />
+              Posted {postedDate}
+            </span>
+            <span className="flex items-center gap-1">
+              <FiClock className="w-4 h-4" />
+              {daysRemaining > 0 ? (
+                <span className="text-green-600 dark:text-green-400 font-medium">
+                  {daysRemaining} days remaining
+                </span>
+              ) : (
+                <span className="text-red-600 dark:text-red-400 font-medium">
+                  Expired
+                </span>
+              )}
+            </span>
           </div>
-        )}
+        </div>
+
+        {/* Status and Metrics - Responsive Layout */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          {/* Status and Applications Count */}
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Status */}
+            <div className="flex items-center gap-2">
+              {isActive && <FiCheckCircle className="w-4 h-4 text-green-500" />}
+              {isExpired && <FiXCircle className="w-4 h-4 text-red-500" />}
+              <span className={`text-sm font-medium px-2 py-1 rounded-full ${
+                isActive 
+                  ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400' 
+                  : 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400'
+              }`}>
+                {displayStatus}
+              </span>
+            </div>
+
+            {/* Applications count */}
+            <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded-lg">
+              <FiUsers className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                {applicationsCount} {applicationsCount === 1 ? 'Application' : 'Applications'}
+              </span>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2 sm:ml-auto">
+            <button 
+              onClick={handleViewApplications}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors whitespace-nowrap"
+            >
+              <FiEye className="w-4 h-4" />
+              <span className="hidden xs:inline">View Applications</span>
+              <span className="xs:hidden">View</span>
+            </button>
+
+            {/* More Actions Menu */}
+            <div className="relative" ref={menuRef}>
+              <button 
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400 transition-colors"
+                aria-label="Job actions menu"
+              >
+                <FiMoreVertical className="w-4 h-4" />
+              </button>
+              
+              {isMenuOpen && (
+                <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10 border border-gray-200 dark:border-gray-700 py-1">
+                  <button 
+                    onClick={handleEditJob}
+                    className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <FiEdit3 className="w-4 h-4" />
+                    Edit Job
+                  </button>
+                  <button 
+                    onClick={handleDeleteJob}
+                    className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    <FiTrash2 className="w-4 h-4" />
+                    Delete Job
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

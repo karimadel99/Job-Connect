@@ -59,13 +59,22 @@ const jobs = [
   
 export default function FeaturesJobs() {
     return (
-        <section id="jobs" className="py-12 bg-light-background-primary dark:bg-dark-background-primary">
-          <div className="max-w-screen-xl mx-auto px-4">
-            <h2 className="text-3xl font-bold mb-8 text-light-text-primary dark:text-dark-text-primary">
-              Our Featured Jobs
-            </h2>
+        <section id="jobs" className="bg-light-background-primary dark:bg-dark-background-primary py-16">
+          <div className="max-w-6xl mx-auto px-4">
+            {/* Header Section */}
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-light-text-primary dark:text-dark-text-primary">
+                Our Featured <span className="text-light-primary-400 dark:text-dark-primary-500">Jobs</span>
+              </h2>
+              
+              <p className="text-lg text-light-text-secondary dark:text-dark-text-secondary max-w-2xl mx-auto">
+                Discover hand-picked job opportunities from top companies. Find your perfect match and take the next step in your career.
+              </p>
+            </div>
+
+            {/* Jobs Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {jobs.map((job,index) => (
+              {jobs.map((job, index) => (
                 <JobCard key={index} job={job} />
               ))}
             </div>

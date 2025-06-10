@@ -29,6 +29,7 @@ export const jobFormValidationSchema = Yup.object({
   education: Yup.string(),
   experience: Yup.string(), 
   jobType: Yup.string().required('Job Type is required'),
+  workPlace: Yup.string().required('Work Place is required'),
   vacancies: Yup.number()
     .typeError('Must be a number')
     .min(1, 'At least 1 is required')
@@ -51,6 +52,7 @@ export const getInitialValues = (job = null) => ({
   education: job?.education || '',
   experience: job?.experience || '',
   jobType: job?.jobType || '',
+  workPlace: job?.workPlace || '',
   vacancies: job?.vacancies !== undefined && job?.vacancies !== null ? String(job.vacancies) : '',
   expirationDate: job?.expirationDate ? new Date(job.expirationDate).toISOString().split('T')[0] : '',
   status: job?.status || 'active',

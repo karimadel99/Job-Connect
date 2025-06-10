@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getAllJobs } from '../../api/jobSeekerApi';
+import { getAllJobs, saveJob, unsaveJob } from '../../api/jobSeekerApi';
 //import jobsData from '../../data/jobsData.json';
 import SearchBar from '../../components/job-seeker/SearchBar';
 import AdvancedFilters from '../../components/job-seeker/AdvancedFilters';
 import JobCard from '../../components/job-seeker/JobCard';
 import ResultsHeader from '../../components/job-seeker/ResultsHeader';
 import Pagination from '../../components/job-seeker/Pagination';
+import { toast } from 'react-hot-toast';
+import Loader from '../../components/Loader';
+import { useSavedJobs } from '../../contexts/SavedJobsContext';
 
 const FindJobs = () => {
   const [jobs, setJobs] = useState([]); 
@@ -22,6 +25,10 @@ const FindJobs = () => {
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [locationQuery, setLocationQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Get saved jobs context
+  const { isJobSaved, toggleSaveJob, fetchSavedJobs } = useSavedJobs();
 
   // Filter options
   const experienceOptions = [
@@ -50,10 +57,14 @@ const FindJobs = () => {
     'All',
     'Full Time',
     'Part Time',
-    'Internship',
-    'Remote',
-    'Temporary',
     'Contract Base'
+  ];
+
+  const workPlace = [
+    'All',
+    'On Site',
+    'Hybrid',
+    'Remote'
   ];
 
   const educationLevels = [
@@ -69,23 +80,32 @@ const FindJobs = () => {
 
   // Fetch jobs from API on mount
   useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        const data = await getAllJobs();
-        console.log('Fetched jobs:', data);
-        // Use data.data here
-        const savedJobIds = JSON.parse(localStorage.getItem('savedJobs') || '[]');
-        const jobsWithSaved = (data.data || []).map(job => ({
+    fetchJobs();
+    fetchSavedJobs();
+  }, [fetchSavedJobs]);
+
+  const fetchJobs = async () => {
+    setIsLoading(true);
+    try {
+      const response = await getAllJobs();
+      if (response.error) {
+        toast.error(response.error);
+        setJobs([]);
+      } else {
+        const jobsWithSaved = response.data.map(job => ({
           ...job,
-          saved: savedJobIds.includes(job.id)
+          saved: Boolean(job.isSaved),
+          isExpired: job.daysRemaining === 0
         }));
         setJobs(jobsWithSaved);
-      } catch (error) {
-        setJobs([]);
       }
-    };
-    fetchJobs();
-  }, []);
+    } catch (error) {
+      toast.error('Failed to fetch jobs');
+      setJobs([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Filter, search, and sort jobs
   const getFilteredJobs = () => {
@@ -161,18 +181,6 @@ const FindJobs = () => {
     setCurrentPage(pageNumber);
   };
 
-  const toggleSaveJob = (jobId) => {
-    const updatedJobs = jobs.map(job => {
-      if (job.id === jobId) {
-        return { ...job, saved: !job.saved };
-      }
-      return job;
-    });
-    setJobs(updatedJobs);
-    const savedJobIds = updatedJobs.filter(job => job.saved).map(job => job.id);
-    localStorage.setItem('savedJobs', JSON.stringify(savedJobIds));
-  };
-
   const handleAdvancedFilterChange = (filterType, value) => {
     setSelectedFilters(prev => {
       const newFilters = { ...prev };
@@ -232,6 +240,7 @@ const FindJobs = () => {
           experienceOptions={experienceOptions}
           salaryRanges={salaryRanges}
           jobTypes={jobTypes}
+          workPlace={workPlace}
           educationLevels={educationLevels}
         />
       </div>
@@ -246,49 +255,57 @@ const FindJobs = () => {
           setSortBy={setSortBy}
         />
 
-        {/* Job Cards */}
-        <div className={`p-6 ${viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-6' : 'space-y-4'}`}>
-          {currentJobs.length > 0 ? (
-            currentJobs.map(job => (
-              <JobCard
-                key={job.id}
-                job={job}
-                viewMode={viewMode}
-                isSaved={job.saved}
-                onToggleSave={toggleSaveJob}
-              />
-            ))
-          ) : (
-            <div className="text-center py-12 px-4">
-              <p className="text-light-text-secondary dark:text-dark-text-secondary mb-2">
-                No jobs found matching your criteria.
-              </p>
-              <button 
-                onClick={() => {
-                  setSearchQuery('');
-                  setLocationQuery('');
-                  setSelectedFilters({
-                    experience: '',
-                    salary: '',
-                    jobType: [],
-                    education: []
-                  });
-                }}
-                className="text-light-primary-600 dark:text-dark-primary-400 hover:text-light-primary-700 dark:hover:text-dark-primary-500 font-medium"
-              >
-                Clear all filters
-              </button>
+        {isLoading ? (
+          <div className="p-6">
+            <Loader />
+          </div>
+        ) : (
+          <>
+            {/* Job Cards */}
+            <div className={`p-6 ${viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-6' : 'space-y-4'}`}>
+              {currentJobs.length > 0 ? (
+                currentJobs.map(job => (
+                  <JobCard
+                    key={job.id}
+                    job={job}
+                    viewMode={viewMode}
+                    isSaved={isJobSaved(job.id)}
+                    onToggleSave={toggleSaveJob}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-12 px-4 col-span-2">
+                  <p className="text-light-text-secondary dark:text-dark-text-secondary mb-2">
+                    No jobs found matching your criteria.
+                  </p>
+                  <button 
+                    onClick={() => {
+                      setSearchQuery('');
+                      setLocationQuery('');
+                      setSelectedFilters({
+                        experience: '',
+                        salary: '',
+                        jobType: [],
+                        education: []
+                      });
+                    }}
+                    className="text-light-primary-600 dark:text-dark-primary-400 hover:text-light-primary-700 dark:hover:text-dark-primary-500 font-medium"
+                  >
+                    Clear all filters
+                  </button>
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* Pagination */}
-        {filteredJobs.length > 0 && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
+            {/* Pagination */}
+            {filteredJobs.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            )}
+          </>
         )}
       </div>
     </div>

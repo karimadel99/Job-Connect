@@ -1,0 +1,115 @@
+/* Employer Dashboard Styles */
+
+/* Ensure sidebar links are clickable */
+.employer-sidebar {
+  position: relative;
+  z-index: 10;
+}
+
+.employer-sidebar nav,
+.employer-sidebar nav ul,
+.employer-sidebar nav li,
+.employer-sidebar nav a {
+  position: relative;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+/* Custom scrollbar for employer components */
+.employer-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.3) transparent;
+}
+
+.employer-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.employer-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.employer-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(59, 130, 246, 0.3);
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.employer-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(59, 130, 246, 0.6);
+}
+
+/* Dark mode scrollbar */
+.dark .employer-scrollbar {
+  scrollbar-color: rgba(96, 165, 250, 0.3) transparent;
+}
+
+.dark .employer-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(96, 165, 250, 0.3);
+}
+
+.dark .employer-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(96, 165, 250, 0.6);
+}
+
+/* Smooth transitions for employer components */
+.employer-transition {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Card hover effects */
+.employer-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.employer-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Focus styles for better accessibility */
+.employer-focus:focus {
+  outline: none;
+  ring: 2px;
+  ring-color: #3b82f6;
+  ring-opacity: 0.5;
+  border-color: #3b82f6;
+}
+
+/* Loading animation */
+.employer-loading {
+  animation: employerPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes employerPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .employer-mobile-stack {
+    flex-direction: column;
+  }
+  
+  .employer-mobile-full {
+    width: 100%;
+  }
+}
+
+/* Debug styles for sidebar links */
+.debug-sidebar-link {
+  background-color: rgba(255, 0, 0, 0.1) !important;
+  border: 1px solid red !important;
+  position: relative !important;
+  z-index: 999 !important;
+  pointer-events: auto !important;
+}
+
+.debug-sidebar-link:hover {
+  background-color: rgba(255, 0, 0, 0.2) !important;
+} 

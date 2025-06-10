@@ -116,19 +116,19 @@ export const getJobById = async (id) => {
 // Add candidate to shortlist
 export const addToShortlist = async (jobId, jobSeekerId) => {
   try {
-    const response = await apiClient.post('/api/employer/AddToShortlist', {
+    const response = await apiClient.post('/api/Employer/AddToShortlist', {
       jobId,
       jobSeekerId
     });
     return {
       success: true,
-      data: response.data.data,
-      message: response.data.message
+      data: response.data.data
     };
   } catch (error) {
+    console.error('AddToShortlist API error:', error);
     return {
       success: false,
-      error: error.response?.data?.message || 'Failed to add to shortlist'
+      error: error.response?.data?.message || 'Failed to add candidate to shortlist. This feature may not be available yet.'
     };
   }
 };
@@ -136,19 +136,107 @@ export const addToShortlist = async (jobId, jobSeekerId) => {
 // Remove candidate from shortlist
 export const removeFromShortlist = async (jobId, jobSeekerId) => {
   try {
-    const response = await apiClient.post('/api/employer/RemoveFromShortlist', {
+    const response = await apiClient.post('/api/Employer/RemoveFromShortlist', {
       jobId,
       jobSeekerId
     });
     return {
       success: true,
-      data: response.data.data,
-      message: response.data.message
+      data: response.data.data
+    };
+  } catch (error) {
+    console.error('RemoveFromShortlist API error:', error);
+    return {
+      success: false,
+      error: error.response?.data?.message || 'Failed to remove candidate from shortlist. This feature may not be available yet.'
+    };
+  }
+};
+
+// Get job seeker details by ID
+export const getJobSeekerById = async (jobSeekerId) => {
+  try {
+    const response = await apiClient.get(`/api/Employer/GetJobSeekerById/${jobSeekerId}`);
+    return {
+      success: true,
+      data: response.data.data
     };
   } catch (error) {
     return {
       success: false,
-      error: error.response?.data?.message || 'Failed to remove from shortlist'
+      error: error.response?.data?.message || 'Failed to fetch job seeker details'
+    };
+  }
+};
+
+// Get job seeker resumes by ID
+export const getSeekerResumesById = async (jobSeekerId) => {
+  try {
+    const response = await apiClient.get(`/api/Employer/GetSeekerResumesWithId/${jobSeekerId}`);
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data?.message || 'Failed to fetch job seeker resumes'
+    };
+  }
+};
+
+// Get applicants with resume for a job
+export const getApplicantsWithResume = async (jobId) => {
+  try {
+    const response = await apiClient.get(`/api/Employer/GetApplicantsWithResume/${jobId}`);
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data?.message || 'Failed to fetch applicants with resumes'
+    };
+  }
+};
+
+// Hire a candidate
+export const hireCandidate = async (jobId, jobSeekerId) => {
+  try {
+    const response = await apiClient.post('/api/Employer/Hire', {
+      jobId: Number(jobId),
+      jobSeekerId: jobSeekerId
+    });
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (error) {
+    console.error('Hire candidate API error:', error);
+    return {
+      success: false,
+      error: error.response?.data?.message || 'Failed to hire candidate'
+    };
+  }
+};
+
+// Reject a candidate
+export const rejectCandidate = async (jobId, jobSeekerId) => {
+  try {
+    const response = await apiClient.post('/api/Employer/Reject', {
+      jobId: Number(jobId),
+      jobSeekerId: jobSeekerId
+    });
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (error) {
+    console.error('Reject candidate API error:', error);
+    return {
+      success: false,
+      error: error.response?.data?.message || 'Failed to reject candidate'
     };
   }
 };

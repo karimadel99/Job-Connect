@@ -16,7 +16,6 @@ const Settings = () => {
     name: '',
     image: null,
     about: '',
-    logoUrl: '',
   });
 
   const [foundingInfo, setFoundingInfo] = useState({
@@ -49,7 +48,6 @@ const Settings = () => {
             name: companyResult.data.companyName || '',
             about: companyResult.data.companyDescription || '',
             image: null,
-            logoUrl: companyResult.data.logoUrl || '',
           });
         } else {
           setError(companyResult.error);

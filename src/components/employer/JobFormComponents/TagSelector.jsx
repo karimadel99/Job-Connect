@@ -69,7 +69,7 @@ const TagSelector = ({ field, form, jobTagsOptions }) => {
   return (
     <div className="w-full relative">
       <div
-        className="w-full px-4 py-1 border border-light-neutral-200 rounded-lg bg-white text-light-text-primary focus:outline-none focus:ring-2 focus:ring-light-primary-500 dark:focus:ring-dark-primary-500"
+        className="w-full px-4 py-1 border border-light-neutral-200 rounded-lg bg-white dark:bg-dark-neutral-700 text-light-text-primary dark:text-dark-text-primary focus:outline-none focus:ring-2 focus:ring-light-primary-500 dark:focus:ring-dark-primary-500"
       >
         <div className="flex flex-wrap gap-2">
           {field.value.map((tag, index) => (

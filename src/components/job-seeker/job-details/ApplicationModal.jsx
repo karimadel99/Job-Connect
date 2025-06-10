@@ -6,6 +6,7 @@ const ApplicationModal = ({
   showModal,
   setShowModal,
   resumes,
+  resumesLoading,
   selectedResume,
   setSelectedResume,
   coverLetter,
@@ -35,14 +36,15 @@ const ApplicationModal = ({
           <div>
             <label className="block text-sm font-medium mb-1 text-light-text-primary dark:text-dark-text-primary">Choose Resume</label>
             <select
-              className="w-full border border-light-neutral-200 dark:border-dark-neutral-700 rounded px-3 py-2 bg-light-neutral-50 dark:bg-dark-neutral-700 text-light-text-primary dark:text-dark-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-light-neutral-200 dark:border-dark-neutral-700 rounded px-3 py-2 bg-light-background-primary dark:bg-dark-background-secondary text-light-text-primary dark:text-dark-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               value={selectedResume}
               onChange={e => setSelectedResume(e.target.value)}
               required
+              disabled={resumesLoading}
             >
-              <option value="">Select...</option>
+              <option value="" className="bg-light-background-primary dark:bg-dark-background-secondary">{resumesLoading ? "Loading resumes..." : "Select..."}</option>
               {resumes && resumes.map(resume => (
-                <option key={resume.id} value={resume.name}>{resume.name}</option>
+                <option key={resume.id} value={resume.id} className="bg-light-background-primary dark:bg-dark-background-secondary">{resume.resumeName}</option>
               ))}
             </select>
           </div>

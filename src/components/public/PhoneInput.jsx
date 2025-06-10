@@ -28,17 +28,38 @@ const countries = [
   { name: "Ethiopia", dialCode: "+251", flag: "🇪🇹" },
   { name: "Finland", dialCode: "+358", flag: "🇫🇮" },
   { name: "France", dialCode: "+33", flag: "🇫🇷" },
+  { name: "Germany", dialCode: "+49", flag: "🇩🇪" },
+  { name: "India", dialCode: "+91", flag: "🇮🇳" },
+  { name: "Japan", dialCode: "+81", flag: "🇯🇵" },
+  { name: "United Kingdom", dialCode: "+44", flag: "🇬🇧" },
+  { name: "United States", dialCode: "+1", flag: "🇺🇸" },
 ];
 
-const PhoneInput = ({ name, value, onChange, onBlur, error, touched }) => {
+const PhoneInput = ({ 
+  name, 
+  value, 
+  onChange, 
+  onBlur, 
+  error, 
+  touched, 
+  onCountryChange,
+  buttonClassName,
+  inputClassName,
+  dropdownClassName,
+  errorClassName
+}) => {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(countries[0]);
   const wrapperRef = useRef(null);
 
   const toggleDropdown = () => setDropdownOpen((prev) => !prev);
+  
   const selectCountry = (country) => {
     setSelectedCountry(country);
     setDropdownOpen(false);
+    if (onCountryChange) {
+      onCountryChange(country);
+    }
   };
   
   // Close dropdown when clicking outside the component
@@ -52,13 +73,22 @@ const PhoneInput = ({ name, value, onChange, onBlur, error, touched }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Default styling classes
+  const defaultButtonClass = "shrink-0 z-10 inline-flex items-center py-2.5 px-4 text-sm font-medium text-center text-light-text-primary dark:text-dark-text-primary bg-light-primary-50 dark:bg-dark-primary-50 border-2 border-light-primary-100 dark:border-dark-primary-200 rounded-l-lg hover:bg-light-primary-100 dark:hover:bg-dark-primary-100 focus:ring-2 focus:outline-none focus:ring-light-primary-300 dark:focus:ring-dark-primary-300 h-11";
+  
+  const defaultInputClass = "block p-2.5 w-full z-20 text-light-text-primary dark:text-dark-text-primary bg-light-primary-50 dark:bg-dark-primary-50 border-2 border-l-0 border-light-primary-100 dark:border-dark-primary-200 rounded-r-lg focus:ring-2 focus:outline-none focus:ring-light-primary-300 dark:focus:ring-dark-primary-300 h-11";
+  
+  const defaultDropdownClass = "absolute top-full left-0 z-20 bg-light-background dark:bg-dark-background divide-y divide-light-primary-100 dark:divide-dark-primary-200 rounded-lg shadow-lg w-64 max-h-60 overflow-y-auto";
+  
+  const defaultErrorClass = "mt-1 text-sm text-light-error dark:text-dark-error";
+
   return (
     <div className="relative" ref={wrapperRef}>
       <div className="flex items-center">
         <button 
           type="button"
           onClick={toggleDropdown}
-          className="shrink-0 z-10 inline-flex items-center py-2.5 px-4 text-sm font-medium text-center text-light-text-primary dark:text-dark-text-primary bg-light-primary-50 dark:bg-dark-primary-50 border-2 border-light-primary-100 dark:border-dark-primary-200 rounded-l-lg hover:bg-light-primary-100 dark:hover:bg-dark-primary-100 focus:ring-2 focus:outline-none focus:ring-light-primary-300 dark:focus:ring-dark-primary-300 h-11"
+          className={buttonClassName || defaultButtonClass}
         >
           <span className="mr-2">{selectedCountry.flag}</span>
           {selectedCountry.dialCode}
@@ -67,7 +97,7 @@ const PhoneInput = ({ name, value, onChange, onBlur, error, touched }) => {
           </svg>
         </button>
         {isDropdownOpen && (
-          <div className="absolute top-full left-0 z-20 bg-light-background dark:bg-dark-background divide-y divide-light-primary-100 dark:divide-dark-primary-200 rounded-lg shadow-lg w-64 max-h-60 overflow-y-auto">
+          <div className={dropdownClassName || defaultDropdownClass}>
             <ul className="py-2 text-sm text-light-text-primary dark:text-dark-text-primary">
               {countries.map((country, index) => (
                 <li key={index}>
@@ -87,19 +117,18 @@ const PhoneInput = ({ name, value, onChange, onBlur, error, touched }) => {
         <input 
           type="tel"
           name={name}
-          id="phone-input"
-          pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
-          placeholder="123-456-7890"
-          required
+          id={name}
+          placeholder="Enter phone number"
           value={value}
           onChange={onChange}
           onBlur={onBlur}
-          className="block p-2.5 w-full z-20 text-light-text-primary dark:text-dark-text-primary bg-light-primary-50 dark:bg-dark-primary-50 border-2 border-l-0 border-light-primary-100 dark:border-dark-primary-200 rounded-r-lg focus:ring-2 focus:outline-none focus:ring-light-primary-300 dark:focus:ring-dark-primary-300 h-11"
+          className={inputClassName || defaultInputClass}
         />
       </div>
-      {touched && error && <p className="mt-1 text-sm text-light-error dark:text-dark-error">{error}</p>}
+      {touched && error && <p className={errorClassName || defaultErrorClass}>{error}</p>}
     </div>
   );
 };
 
+export { countries };
 export default PhoneInput;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useNavigate } from 'react-router-dom';
@@ -7,27 +7,6 @@ import toast from 'react-hot-toast';
 import JobSeekerPersonalInfo from '../components/job-seeker/JobSeekerPersonalInfo';
 import JobSeekerJobDetails from '../components/job-seeker/JobSeekerJobDetails';
 import { registerJobSeeker } from '../api/authApi';
-
-
-// Add countries array for phone input dropdown
-const countries = [
-  { name: "Argentina", dialCode: "+54", flag: "🇦🇷" },
-  { name: "Armenia", dialCode: "+374", flag: "🇦🇲" },
-  { name: "Australia", dialCode: "+61", flag: "🇦🇺" },
-  { name: "Austria", dialCode: "+43", flag: "🇦🇹" },
-  { name: "Bahrain", dialCode: "+973", flag: "🇧🇭" },
-  { name: "Bangladesh", dialCode: "+880", flag: "🇧🇩" },
-  { name: "Brazil", dialCode: "+55", flag: "🇧🇷" },
-  { name: "Canada", dialCode: "+1", flag: "🇨🇦" },
-  { name: "China", dialCode: "+86", flag: "🇨🇳" },
-  { name: "Egypt", dialCode: "+20", flag: "🇪🇬" },
-  { name: "France", dialCode: "+33", flag: "🇫🇷" },
-  { name: "Germany", dialCode: "+49", flag: "🇩🇪" },
-  { name: "India", dialCode: "+91", flag: "🇮🇳" },
-  { name: "Japan", dialCode: "+81", flag: "🇯🇵" },
-  { name: "United Kingdom", dialCode: "+44", flag: "🇬🇧" },
-  { name: "United States", dialCode: "+1", flag: "🇺🇸" },
-];
 
 const JobSeekerRegister = () => {
   const navigate = useNavigate();
@@ -50,28 +29,6 @@ const JobSeekerRegister = () => {
         customJobTitle: '', // For "Other" job title option
       };
 
-  // Phone input dropdown state
-  const [isDropdownOpen, setDropdownOpen] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState(countries[0]);
-  const phoneDropdownRef = useRef(null);
-
-  const toggleDropdown = () => setDropdownOpen((prev) => !prev);
-  
-  const selectCountry = (country) => {
-    setSelectedCountry(country);
-    setDropdownOpen(false);
-  };
-  
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (phoneDropdownRef.current && !phoneDropdownRef.current.contains(event.target)) {
-        setDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   const formik = useFormik({
     initialValues,
     validationSchema: Yup.object({
@@ -85,7 +42,9 @@ const JobSeekerRegister = () => {
           /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/,
           'Password must include at least one uppercase, one lowercase, one digit, and one special character'
         ),
-      phoneNumber: Yup.string().required('Phone number is required'),
+      phoneNumber: Yup.string()
+        .required('Phone number is required')
+        .matches(/^[0-9\-\+\(\)\s]+$/, 'Please enter a valid phone number'),
       address: Yup.string().required('Address is required'),
       yearsOfExperience: Yup.number().min(0, 'Cannot be negative').required('Years of experience is required'),
       degree: Yup.string().required('Degree is required'),
@@ -214,12 +173,6 @@ const JobSeekerRegister = () => {
               setShowPassword={setShowPassword}
               handleNext={handleNext}
               handleClearProgress={handleClearProgress}
-              phoneDropdownRef={phoneDropdownRef}
-              isDropdownOpen={isDropdownOpen}
-              toggleDropdown={toggleDropdown}
-              selectedCountry={selectedCountry}
-              selectCountry={selectCountry}
-              countries={countries}
             />
           )}
 

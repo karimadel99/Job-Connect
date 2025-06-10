@@ -122,7 +122,7 @@ const EmployerCompanyDetails = ({ formik, goBack }) => {
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
           value={formik.values.companyDescription}
-          className="w-full bg-[#EEF2FF] dark:bg-[#413f84] border-0 text-sm text-[#312E81] dark:text-[#E0E7FF] focus:ring-2 focus:outline-none focus:ring-[#312E81] py-2.5 rounded-lg"
+          className="w-full p-5 bg-[#EEF2FF] dark:bg-[#413f84] border-0 text-sm text-[#312E81] dark:text-[#E0E7FF] focus:ring-2 focus:outline-none focus:ring-[#312E81] py-2.5 rounded-lg"
         ></textarea>
         {formik.touched.companyDescription && formik.errors.companyDescription && (
           <p className="mt-1 text-sm text-red-600">{formik.errors.companyDescription}</p>

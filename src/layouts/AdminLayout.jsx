@@ -28,10 +28,6 @@ const AdminLayout = () => {
         </div>
         
         <div className="flex items-center space-x-4">
-          {/* Notifications */}
-          <button className="p-2 text-light-text-secondary dark:text-dark-text-secondary hover:bg-light-neutral-100 dark:hover:bg-dark-neutral-700 rounded-full transition-colors">
-            <FiBell className="w-5 h-5" />
-          </button>
 
           {/* Dark Mode Toggle */}
           <DarkModeToggle />
