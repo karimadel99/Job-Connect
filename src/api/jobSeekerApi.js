@@ -1,4 +1,5 @@
 import apiClient from "./axios";
+import axios from "axios";
 
 export const getAllJobs = async () => {
   try {
@@ -171,3 +172,24 @@ export const applyForJobByResumeId = async (jobId, resumeId, coverLetter) => {
     return { error: error.response?.data?.message || "Failed to apply for job" };
   }
 };
+
+/**
+ * Fetch recommended jobs for a job seeker using the ML model endpoint.
+ * @param {string} seekerId - The job seeker's unique ID.
+ * @param {number} topN - The number of top recommendations to fetch.
+ * @returns {Promise<Object>} The response from the recommendation system.
+ */
+export async function getRecommendedJobs(seekerId, topN = 10) {
+  try {
+    const response = await axios.post(
+      'https://jobconnectrecommendationsystem.onrender.com/recommend',
+      {
+        seeker_id: seekerId,
+        top_n: topN,
+      }
+    );
+    return response;
+  } catch (error) {
+    return { error: error?.response?.data?.message || error.message };
+  }
+}

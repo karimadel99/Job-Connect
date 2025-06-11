@@ -7,9 +7,23 @@ function PostJobPage() {
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
       const payload = {
-        ...values,
+        title: values.title,
+        tags: values.tags || [],
+        description: values.description,
+        minSalary: parseInt(values.minSalary) || 0,
+        maxSalary: parseInt(values.maxSalary) || 0,
+        salaryType: values.salaryType || '',
+        education: values.education || '',
+        experience: values.experience ? String(values.experience) : '',
+        vacancies: parseInt(values.vacancies) || 1,
         expirationDate: values.expirationDate ? new Date(values.expirationDate).toISOString() : null,
+        jobType: values.jobType,
+        workPlace: values.workPlace,
+        responsibilities: values.responsibilities || [],
+        location: values.location
       };
+      
+      console.log('Final payload before sending:', payload); // Additional debug log
       
       const result = await postJob(payload);
       

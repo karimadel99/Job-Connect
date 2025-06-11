@@ -52,15 +52,45 @@ export const getJobStates = async () => {
 // Post a new job
 export const postJob = async (jobData) => {
   try {
+    console.log('Sending job data to API:', jobData); // Debug log
     const response = await apiClient.post('/api/employer/PostJob', jobData);
     return {
       success: true,
       data: response.data.data
     };
   } catch (error) {
+    console.error('PostJob API Error:', error); // Debug log
+    console.error('Error response:', error.response?.data); // Debug log
+    console.error('Error status:', error.response?.status); // Debug log
+    
+    // Log specific validation errors
+    if (error.response?.data?.errors) {
+      console.error('Validation errors details:');
+      Object.entries(error.response.data.errors).forEach(([field, messages]) => {
+        console.error(`${field}:`, messages);
+      });
+    }
+    
+    let errorMessage = 'Failed to post job';
+    
+    if (error.response?.data) {
+      // Check for different error response formats
+      if (typeof error.response.data === 'string') {
+        errorMessage = error.response.data;
+      } else if (error.response.data.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response.data.errors) {
+        // Handle validation errors
+        const validationErrors = Object.values(error.response.data.errors).flat();
+        errorMessage = validationErrors.join(', ');
+      } else if (error.response.data.title) {
+        errorMessage = error.response.data.title;
+      }
+    }
+    
     return {
       success: false,
-      error: error.response?.data?.message || 'Failed to post job'
+      error: errorMessage
     };
   }
 };
@@ -84,15 +114,45 @@ export const deleteJob = async (id) => {
 // Update a job
 export const updateJob = async (id, jobData) => {
   try {
+    console.log('Sending update job data to API:', jobData); // Debug log
     const response = await apiClient.put(`/api/employer/UpdateJob?id=${id}`, jobData);
     return {
       success: true,
       data: response.data.data
     };
   } catch (error) {
+    console.error('UpdateJob API Error:', error); // Debug log
+    console.error('Error response:', error.response?.data); // Debug log
+    console.error('Error status:', error.response?.status); // Debug log
+    
+    // Log specific validation errors
+    if (error.response?.data?.errors) {
+      console.error('Validation errors details:');
+      Object.entries(error.response.data.errors).forEach(([field, messages]) => {
+        console.error(`${field}:`, messages);
+      });
+    }
+    
+    let errorMessage = 'Failed to update job';
+    
+    if (error.response?.data) {
+      // Check for different error response formats
+      if (typeof error.response.data === 'string') {
+        errorMessage = error.response.data;
+      } else if (error.response.data.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response.data.errors) {
+        // Handle validation errors
+        const validationErrors = Object.values(error.response.data.errors).flat();
+        errorMessage = validationErrors.join(', ');
+      } else if (error.response.data.title) {
+        errorMessage = error.response.data.title;
+      }
+    }
+    
     return {
       success: false,
-      error: error.response?.data?.message || 'Failed to update job'
+      error: errorMessage
     };
   }
 };

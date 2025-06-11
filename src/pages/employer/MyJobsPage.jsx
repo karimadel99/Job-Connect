@@ -135,14 +135,6 @@ const MyJobsPage = () => {
             </button>
           </div>
 
-          {/* Table Header (desktop only) */}
-          <div className="hidden md:grid grid-cols-6 p-4 border-b border-light-neutral-200 dark:border-dark-neutral-700 bg-light-background dark:bg-dark-background">
-            <div className="md:col-span-2 text-light-text-secondary dark:text-dark-text-secondary font-medium">Job Title</div>
-            <div className="text-light-text-secondary dark:text-dark-text-secondary font-medium">Status</div>
-            <div className="text-light-text-secondary dark:text-dark-text-secondary font-medium">Applications</div>
-            <div className="text-light-text-secondary dark:text-dark-text-secondary font-medium">Actions</div>
-            <div className="text-right"></div>
-          </div>
 
           {/* Jobs List */}
           <div className="bg-light-background dark:bg-dark-background shadow rounded">

@@ -37,13 +37,24 @@ export default function EditJobPage() {
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
       const payload = {
-        ...values,
-        minSalary: values.minSalary === '' ? 0 : Number(values.minSalary),
-        maxSalary: values.maxSalary === '' ? 0 : Number(values.maxSalary),
-        vacancies: values.vacancies === '' ? 0 : Number(values.vacancies),
+        title: values.title,
+        tags: values.tags || [],
+        description: values.description,
+        minSalary: parseInt(values.minSalary) || 0,
+        maxSalary: parseInt(values.maxSalary) || 0,
+        salaryType: values.salaryType || '',
+        education: values.education || '',
+        experience: values.experience ? String(values.experience) : '',
+        vacancies: parseInt(values.vacancies) || 1,
         expirationDate: values.expirationDate ? new Date(values.expirationDate).toISOString() : null,
-        status: values.status || 'active',
+        jobType: values.jobType,
+        workPlace: values.workPlace,
+        responsibilities: values.responsibilities || [],
+        location: values.location
       };
+      
+      console.log('Final update payload before sending:', payload); // Debug log
+      
       const result = await updateJob(jobId, payload);
       if (result.success) {
         toast.success('Job updated successfully!');

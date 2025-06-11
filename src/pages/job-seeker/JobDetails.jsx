@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import JobHeader from '../../components/job-seeker/job-details/JobHeader';
 import JobDescription from '../../components/job-seeker/job-details/JobDescription';
 import Responsibilities from '../../components/job-seeker/job-details/Responsibilities';
@@ -10,11 +10,12 @@ import ApplicationModal from '../../components/job-seeker/job-details/Applicatio
 import NotFoundState from '../../components/job-seeker/job-details/NotFoundState';
 //import jobsData from '../../data/jobsData.json';
 import Loader from '../../components/Loader';
-import { getJobById, getAllJobs, getResumes, applyForJobByResumeId } from '../../api/jobSeekerApi';
+import { getJobById, getAllJobs, getResumes, applyForJobByResumeId, getRecommendedJobs, getAppliedJobs, getSavedJobs, getSeekerProfile } from '../../api/jobSeekerApi';
 // Remove: import axios from 'axios';
 
 const JobDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -24,6 +25,11 @@ const JobDetails = () => {
   const [resumes, setResumes] = useState([]);
   const [resumesLoading, setResumesLoading] = useState(false);
   const [relatedJobs, setRelatedJobs] = useState([]);
+  const [recommendedJobs, setRecommendedJobs] = useState([]);
+  const [recommendedLoading, setRecommendedLoading] = useState(false);
+  const [recommendedError, setRecommendedError] = useState('');
+  const [showRecommendationMsg, setShowRecommendationMsg] = useState(false);
+  const [seekerId, setSeekerId] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -86,6 +92,46 @@ const JobDetails = () => {
     fetchResumes();
   }, []);
 
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      setRecommendedLoading(true);
+      setRecommendedError('');
+      try {
+        const seekerProfile = await getSeekerProfile();
+        if (seekerProfile && seekerProfile.data && seekerProfile.data.id) {
+          setSeekerId(seekerProfile.data.id);
+          const [applied, saved] = await Promise.all([
+            getAppliedJobs(),
+            getSavedJobs()
+          ]);
+          const appliedCount = Array.isArray(applied.data) ? applied.data.length : 0;
+          const savedCount = Array.isArray(saved.data) ? saved.data.length : 0;
+          if (appliedCount === 0 && savedCount === 0) {
+            setShowRecommendationMsg(true);
+            setRecommendedJobs([]);
+          } else {
+            setShowRecommendationMsg(false);
+            const recRes = await getRecommendedJobs(seekerProfile.data.id, 10);
+            if (recRes && recRes.data && Array.isArray(recRes.data.recommendations) && recRes.data.recommendations.length > 0) {
+              setRecommendedJobs(recRes.data.recommendations);
+            } else {
+              setRecommendedError('No recommendations found.');
+              setRecommendedJobs([]);
+            }
+          }
+        } else {
+          setRecommendedError('Could not determine seeker profile.');
+        }
+      } catch (err) {
+        setRecommendedError('Failed to fetch recommendations.');
+        setRecommendedJobs([]);
+      } finally {
+        setRecommendedLoading(false);
+      }
+    };
+    fetchRecommendations();
+  }, [id]);
+
   const handleApplySubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -140,51 +186,60 @@ const JobDetails = () => {
         </div>
       </div>
       <section className="mt-8">
-        <h2 className="text-xl font-semibold mb-4 text-light-text-primary dark:text-dark-text-primary">Related Jobs</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
-          {relatedJobs.map(related => {
-            const isExpired = related.daysRemaining === 0 || related.isExpired;
-            return (
-              <div key={related.id} className={`bg-light-background-primary dark:bg-dark-background-secondary rounded-lg shadow-sm p-4 flex flex-col gap-2 border border-light-neutral-200 dark:border-dark-neutral-700 hover:shadow-md transition-all duration-200 ${isExpired ? 'opacity-60' : ''}`}>
+        <h2 className="text-xl font-semibold mb-4 text-light-text-primary dark:text-dark-text-primary">Recommended Jobs</h2>
+        {recommendedLoading ? (
+          <Loader />
+        ) : showRecommendationMsg ? (
+          <div className="p-4 bg-yellow-50 dark:bg-dark-neutral-800 rounded-lg border border-yellow-200 dark:border-dark-neutral-700 text-yellow-800 dark:text-yellow-200">
+            To get personalized recommendations, please save or apply for at least one job.
+          </div>
+        ) : recommendedError ? (
+          <div className="p-4 bg-red-50 dark:bg-dark-neutral-800 rounded-lg border border-red-200 dark:border-dark-neutral-700 text-red-800 dark:text-red-200">
+            {recommendedError}
+          </div>
+        ) : recommendedJobs.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
+            {recommendedJobs.map(rec => (
+              <div 
+                key={rec.Id || rec.id} 
+                className="bg-light-background-primary dark:bg-dark-background-secondary rounded-lg shadow-sm p-4 flex flex-col gap-2 border border-light-neutral-200 dark:border-dark-neutral-700 hover:shadow-md transition-all duration-200 cursor-pointer"
+                onClick={() => navigate(`/jobseeker/job-details/${rec.Id}`)}
+              >
                 <div className="flex items-center gap-2 mb-2">
-                  <div className={`w-10 h-10 rounded-full ${isExpired ? 'bg-light-neutral-100 dark:bg-dark-neutral-700' : 'bg-light-primary-50 dark:bg-dark-primary-50'} flex items-center justify-center overflow-hidden`}>
-                    {related.logo ? (
-                      <img src={`/company-logos/${related.logo}.png`} alt={related.company} className="h-full w-full object-cover" />
-                    ) : (
-                      <span className={`${isExpired ? 'text-light-neutral-500 dark:text-dark-neutral-400' : 'text-light-primary-600 dark:text-dark-primary-400'} font-medium`}>
-                        {related.company ? related.company.charAt(0).toUpperCase() : '?'}
+                  <div className="w-10 h-10 rounded-full bg-light-primary-50 dark:bg-dark-primary-50 flex items-center justify-center overflow-hidden">
+                    <span className="text-light-primary-600 dark:text-dark-primary-400 font-medium">
+                      {rec.company ? rec.company.charAt(0).toUpperCase() : '?'}
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <span className="font-semibold text-light-text-primary dark:text-dark-text-primary">{rec.Title}</span>
+                  </div>
+                </div>
+                <span className="text-xs text-light-text-secondary dark:text-dark-text-secondary">{rec.company}</span>
+                <span className="text-xs text-light-text-secondary dark:text-dark-text-secondary flex items-center">{rec.Location}</span>
+                <span className="text-xs font-medium text-light-primary-600 dark:text-dark-primary-400 mt-1">
+                  ${rec.MinSalary.toLocaleString()} - ${rec.MaxSalary.toLocaleString()} /{rec.SalaryType}
+                </span>
+                {rec.skills && rec.skills.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {rec.skills.slice(0, 3).map((skill, index) => (
+                      <span key={index} className="px-2 py-0.5 text-xs bg-light-primary-50 dark:bg-dark-primary-900/30 text-light-primary-600 dark:text-dark-primary-400 rounded-full">
+                        {skill}
+                      </span>
+                    ))}
+                    {rec.skills.length > 3 && (
+                      <span className="px-2 py-0.5 text-xs bg-light-neutral-100 dark:bg-dark-neutral-800 text-light-text-secondary dark:text-dark-text-secondary rounded-full">
+                        +{rec.skills.length - 3} more
                       </span>
                     )}
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className={`font-semibold ${isExpired ? 'text-light-text-secondary dark:text-dark-text-secondary' : 'text-light-text-primary dark:text-dark-text-primary'}`}>{related.title}</span>
-                      {isExpired && (
-                        <span className="text-xs bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-0.5 rounded-full">
-                          Expired
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <span className="text-xs text-light-text-secondary dark:text-dark-text-secondary">{related.company}</span>
-                <span className="text-xs text-light-text-secondary dark:text-dark-text-secondary flex items-center">
-                  <svg className={`w-3 h-3 mr-1 ${isExpired ? 'text-light-neutral-400 dark:text-dark-neutral-500' : 'text-light-primary-500 dark:text-dark-primary-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  {related.location}
-                </span>
-                <span className={`text-xs font-medium ${isExpired ? 'text-light-text-secondary dark:text-dark-text-secondary' : 'text-light-primary-600 dark:text-dark-primary-400'} mt-1`}>{related.salary}</span>
-                {related.daysRemaining !== undefined && (
-                  <span className="text-xs text-light-text-secondary dark:text-dark-text-secondary">
-                    {isExpired ? 'Expired' : `${related.daysRemaining} days remaining`}
-                  </span>
                 )}
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-light-text-secondary dark:text-dark-text-secondary">No recommendations available.</div>
+        )}
       </section>
       {showModal && (
         <ApplicationModal
