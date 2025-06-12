@@ -131,20 +131,38 @@ export const deleteSeekerProfile = async () => {
 
 export const uploadResume = async (formData) => {
   try {
+    console.log('API: Uploading resume to server...');
     const response = await apiClient.post("/api/JobSeeker/UploadResume", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
+    console.log('API: Upload response received:', response);
+    console.log('API: Upload response data:', response.data);
     return response.data;
   } catch (error) {
+    console.error('API: Upload error details:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+    });
     return { error: error.response?.data?.message || "Failed to upload resume" };
   }
 };
 
 export const getResumes = async () => {
   try {
+    console.log('API: Fetching resumes from server...');
     const response = await apiClient.get("/api/JobSeeker/GetResumes");
+    console.log('API: Resumes fetch response received:', response);
+    console.log('API: Resumes data:', response.data);
     return response.data;
   } catch (error) {
+    console.error('API: Resumes fetch error details:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+    });
     return { error: error.response?.data?.message || "Failed to fetch resumes" };
   }
 };
@@ -181,15 +199,121 @@ export const applyForJobByResumeId = async (jobId, resumeId, coverLetter) => {
  */
 export async function getRecommendedJobs(seekerId, topN = 10) {
   try {
+    // Create an AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
     const response = await axios.post(
       'https://jobconnectrecommendationsystem.onrender.com/recommend',
       {
         seeker_id: seekerId,
         top_n: topN,
+      },
+      {
+        timeout: 15000, // 15 second timeout
+        signal: controller.signal,
       }
     );
+    
+    clearTimeout(timeoutId);
     return response;
   } catch (error) {
+    if (error.code === 'ECONNABORTED' || error.name === 'AbortError') {
+      return { error: 'Request timeout. The recommendation service is taking too long to respond.' };
+    }
     return { error: error?.response?.data?.message || error.message };
   }
 }
+
+export const parseResume = async (formData) => {
+  try {
+    console.log('API: Sending resume for parsing...');
+    
+    // Create a new FormData with the same file
+    const file = formData.get('resume');
+    const mlFormData = new FormData();
+    mlFormData.append('file', file);
+
+    // Send to the local ML model endpoint
+    const response = await axios.post(
+      'http://127.0.0.1:5000/parse_resume',
+      mlFormData,
+      {
+        headers: { 
+          'Content-Type': 'multipart/form-data'
+        },
+        timeout: 30000 // 30 second timeout
+      }
+    );
+    
+    console.log('API: Parse response received:', response);
+    return response.data;
+  } catch (error) {
+    console.error('API: Resume parsing error details:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+    });
+    
+    // Handle timeout specifically
+    if (error.code === 'ECONNABORTED') {
+      return { error: 'Resume parsing timed out. Please try again.' };
+    }
+    
+    return { 
+      error: error.response?.data?.message || 
+             error.response?.data || 
+             error.message || 
+             "Failed to parse resume" 
+    };
+  }
+};
+
+export const updateProfileFromParsedResume = async (parsedData) => {
+  try {
+    console.log('API: Updating profile with parsed resume data...');
+    
+    // Transform the parsed data into profile format
+    const profileData = {
+      // Basic info
+      address: parsedData.LOCATION?.[0] || null,
+      
+      // Education
+      degree: parsedData.DEGREE?.[0] || null,
+      
+      // Skills
+      skills: parsedData.SKILLS?.map(skill => ({
+        skillName: skill.trim()
+      })) || [],
+      
+      // Certifications
+      certifications: parsedData.CERTIFICATION?.map(cert => ({
+        certificationName: cert.trim()
+      })) || [],
+      
+      // Work Experience
+      companyWorkedAt: parsedData["COMPANIES WORKED AT"]?.map(company => ({
+        companyName: company.trim()
+      })) || [],
+      
+      workedAs: parsedData["WORKED AS"]?.map(position => ({
+        jobTitle: position.trim()
+      })) || []
+    };
+
+    const response = await apiClient.put("/api/JobSeeker/UpdateSeekerProfile", profileData, {
+      headers: { "Content-Type": "application/json" },
+    });
+    console.log('API: Profile update with parsed data response:', response);
+    return response.data;
+  } catch (error) {
+    console.error('API: Profile update with parsed data error:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+    });
+    return { error: error.response?.data?.message || "Failed to update profile with parsed resume data" };
+  }
+};

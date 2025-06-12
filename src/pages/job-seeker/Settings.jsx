@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import { toast } from 'react-hot-toast';
-import { getSeekerProfile, updateSeekerProfile, deleteSeekerProfile, uploadResume, getResumes, deleteResume } from '../../api/jobSeekerApi';
+import { getSeekerProfile, updateSeekerProfile, deleteSeekerProfile, uploadResume, getResumes, deleteResume, parseResume, updateProfileFromParsedResume } from '../../api/jobSeekerApi';
 import Loader from '../../components/Loader';
 import SkillsList from '../../components/job-seeker/profile/SkillsList';
 import CertificationsList from '../../components/job-seeker/profile/CertificationsList';
@@ -134,16 +134,21 @@ export default function Settings() {
 
   const fetchResumes = async () => {
     setResumeLoading(true);
+    console.log('Fetching resumes...');
     try {
       const response = await getResumes();
+      console.log('Resumes fetch response:', response);
+      
       if (response.error) {
+        console.error('Failed to fetch resumes:', response.error);
         toast.error(response.error);
       } else {
+        console.log('Resumes data received:', response.data);
         setResumes(response.data || []);
       }
     } catch (error) {
-      toast.error('Failed to load resumes');
       console.error('Error fetching resumes:', error);
+      toast.error('Failed to load resumes');
     } finally {
       setResumeLoading(false);
     }
@@ -153,15 +158,19 @@ export default function Settings() {
     const file = event.target.files[0];
     if (!file) return;
 
+    console.log('Starting resume upload for file:', file.name, 'Type:', file.type, 'Size:', file.size);
+
     // Validate file type
     const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
     if (!allowedTypes.includes(file.type)) {
+      console.error('Invalid file type:', file.type);
       toast.error('Please upload a PDF or Word document');
       return;
     }
 
     // Validate file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
+      console.error('File too large:', file.size);
       toast.error('File size must be less than 5MB');
       return;
     }
@@ -170,19 +179,58 @@ export default function Settings() {
     try {
       const formData = new FormData();
       formData.append('resume', file);
+      
+      console.log('FormData created, uploading resume...');
+      console.log('FormData entries:', Array.from(formData.entries()));
 
-      const response = await uploadResume(formData);
-      if (response.error) {
-        toast.error(response.error);
-      } else {
-        toast.success('Resume uploaded successfully!');
-        fetchResumes(); // Refresh the list
-        // Clear the input
-        event.target.value = '';
+      // First, upload the resume
+      const uploadResponse = await uploadResume(formData);
+      if (uploadResponse.error) {
+        console.error('Upload failed with error:', uploadResponse.error);
+        toast.error(uploadResponse.error);
+        return;
       }
+
+      console.log('Upload successful, response data:', uploadResponse.data || uploadResponse);
+      toast.success('Resume uploaded successfully!');
+
+      // Then, parse the resume
+      console.log('Parsing resume...');
+      const parseResponse = await parseResume(formData);
+      if (parseResponse.error) {
+        console.error('Parse failed with error:', parseResponse.error);
+        toast.error('Resume uploaded but parsing failed: ' + parseResponse.error);
+        return;
+      }
+
+      console.log('Parse successful, parsed data:', parseResponse.data);
+
+      // Finally, update the profile with parsed data
+      console.log('Updating profile with parsed data...');
+      const updateResponse = await updateProfileFromParsedResume(parseResponse.data);
+      if (updateResponse.error) {
+        console.error('Profile update failed with error:', updateResponse.error);
+        toast.error('Resume parsed but profile update failed: ' + updateResponse.error);
+      } else {
+        console.log('Profile updated successfully with parsed data');
+        toast.success('Profile updated with resume data!');
+        
+        // Refresh the profile data to show the updates
+        const refreshedProfile = await getSeekerProfile();
+        if (!refreshedProfile.error) {
+          setProfileData(refreshedProfile.data);
+        }
+      }
+      
+      // Refresh the resumes list
+      console.log('Refreshing resume list...');
+      await fetchResumes();
+      
+      // Clear the input
+      event.target.value = '';
     } catch (error) {
-      toast.error('Failed to upload resume');
-      console.error('Error uploading resume:', error);
+      console.error('Upload/parse/update error caught:', error);
+      toast.error('Failed to process resume');
     } finally {
       setUploadingResume(false);
     }
@@ -243,7 +291,7 @@ export default function Settings() {
       
       // If no changes detected, show message and return
       if (Object.keys(changedValues).length === 0) {
-        toast.info('No changes detected');
+        toast('No changes detected');
         setSubmitting(false);
         return;
       }
@@ -898,6 +946,7 @@ export default function Settings() {
                         className="hidden"
                         accept=".pdf,.doc,.docx"
                         onChange={handleResumeUpload}
+                        onFocus={() => console.log('File input focused')}
                         disabled={uploadingResume}
                       />
                     </label>
@@ -970,12 +1019,26 @@ export default function Settings() {
                                 </p>
                               </div>
                             </div>
-                            <button
-                              onClick={() => handleDeleteResume(resume.id, resume.resumeName)}
-                              className="px-3 py-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors text-sm font-medium"
-                            >
-                              Delete
-                            </button>
+                            <div className="flex items-center space-x-2">
+                              {resume.resumePath && (
+                                <button
+                                  onClick={() => {
+                                    window.open(resume.resumePath, '_blank');
+                                    toast.success('Opening resume...');
+                                  }}
+                                  className="px-3 py-1.5 text-light-primary-600 dark:text-dark-primary-400 hover:bg-light-primary-50 dark:hover:bg-dark-primary-900/20 rounded-lg transition-colors text-sm font-medium"
+                                  title="View/Download Resume"
+                                >
+                                  View
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleDeleteResume(resume.id, resume.resumeName)}
+                                className="px-3 py-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors text-sm font-medium"
+                              >
+                                Delete
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}

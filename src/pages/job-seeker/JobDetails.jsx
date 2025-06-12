@@ -11,7 +11,6 @@ import NotFoundState from '../../components/job-seeker/job-details/NotFoundState
 //import jobsData from '../../data/jobsData.json';
 import Loader from '../../components/Loader';
 import { getJobById, getAllJobs, getResumes, applyForJobByResumeId, getRecommendedJobs, getAppliedJobs, getSavedJobs, getSeekerProfile } from '../../api/jobSeekerApi';
-// Remove: import axios from 'axios';
 
 const JobDetails = () => {
   const { id } = useParams();
@@ -114,6 +113,9 @@ const JobDetails = () => {
             const recRes = await getRecommendedJobs(seekerProfile.data.id, 10);
             if (recRes && recRes.data && Array.isArray(recRes.data.recommendations) && recRes.data.recommendations.length > 0) {
               setRecommendedJobs(recRes.data.recommendations);
+            } else if (recRes.error) {
+              setRecommendedError(`Unable to load recommendations: ${recRes.error}`);
+              setRecommendedJobs([]);
             } else {
               setRecommendedError('No recommendations found.');
               setRecommendedJobs([]);
@@ -195,7 +197,18 @@ const JobDetails = () => {
           </div>
         ) : recommendedError ? (
           <div className="p-4 bg-red-50 dark:bg-dark-neutral-800 rounded-lg border border-red-200 dark:border-dark-neutral-700 text-red-800 dark:text-red-200">
-            {recommendedError}
+            <div className="flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <div>
+                <p className="font-medium">Recommendations Unavailable</p>
+                <p className="text-sm mt-1">{recommendedError}</p>
+                {recommendedError.includes('timeout') && (
+                  <p className="text-sm mt-1">The recommendation service might be sleeping. Please try refreshing the page in a moment.</p>
+                )}
+              </div>
+            </div>
           </div>
         ) : recommendedJobs.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">

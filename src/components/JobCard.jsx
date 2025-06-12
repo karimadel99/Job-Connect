@@ -1,15 +1,82 @@
 import React, { useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function JobCard({ job }) {
   const [showToast, setShowToast] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const handleApplyClick = () => {
+    // Check if user is logged in
+    if (user) {
+      // Check user role
+      if (user.role === 'jobseeker') {
+        // If user is a job seeker, redirect to dashboard without showing toast
+        navigate('/jobseeker/dashboard');
+        return;
+      } else if (user.role === 'employer') {
+        // If user is an employer, show a different message
+        setShowToast(true);
+        setTimeout(() => {
+          setShowToast(false);
+        }, 4000);
+        return;
+      } else if (user.role === 'admin') {
+        // If user is an admin, show a different message
+        setShowToast(true);
+        setTimeout(() => {
+          setShowToast(false);
+        }, 4000);
+        return;
+      }
+    }
+    
+    // If user is not logged in, show the login prompt toast
     setShowToast(true);
-    // Auto-hide toast after 4 seconds
     setTimeout(() => {
       setShowToast(false);
     }, 4000);
   };
+
+  // Function to get appropriate toast message based on user role
+  const getToastMessage = () => {
+    if (!user) {
+      return "Please login or register to browse and apply for jobs!";
+    } else if (user.role === 'employer') {
+      return "Employers cannot apply for jobs. Switch to job seeker account to apply.";
+    } else if (user.role === 'admin') {
+      return "Admins cannot apply for jobs. This feature is for job seekers only.";
+    }
+    return "Please login or register to browse and apply for jobs!";
+  };
+
+  // Function to get appropriate toast color based on user role
+  const getToastStyles = () => {
+    if (!user) {
+      return {
+        bgClass: "bg-orange-50 dark:bg-orange-900/90",
+        textClass: "text-orange-800 dark:text-orange-200",
+        borderClass: "border-orange-500",
+        iconColor: "text-orange-500"
+      };
+    } else if (user.role === 'employer' || user.role === 'admin') {
+      return {
+        bgClass: "bg-blue-50 dark:bg-blue-900/90",
+        textClass: "text-blue-800 dark:text-blue-200",
+        borderClass: "border-blue-500",
+        iconColor: "text-blue-500"
+      };
+    }
+    return {
+      bgClass: "bg-orange-50 dark:bg-orange-900/90",
+      textClass: "text-orange-800 dark:text-orange-200",
+      borderClass: "border-orange-500",
+      iconColor: "text-orange-500"
+    };
+  };
+
+  const toastStyles = getToastStyles();
 
   return (
     <>
@@ -69,22 +136,22 @@ export default function JobCard({ job }) {
 
       {/* Toast Notification */}
       {showToast && (
-        <div className="fixed top-4 right-4 z-50 bg-orange-50 dark:bg-orange-900/90 text-orange-800 dark:text-orange-200 px-6 py-4 rounded-lg shadow-lg border-l-4 border-orange-500 animate-slide-in-right backdrop-blur-sm">
+        <div className={`fixed top-4 right-4 z-50 ${toastStyles.bgClass} ${toastStyles.textClass} px-6 py-4 rounded-lg shadow-lg border-l-4 ${toastStyles.borderClass} animate-slide-in-right backdrop-blur-sm`}>
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <svg className="w-5 h-5 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+              <svg className={`w-5 h-5 ${toastStyles.iconColor}`} fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
             </div>
             <div className="ml-3">
               <p className="text-sm font-medium">
-                Please login or register to browse and apply for jobs!
+                {getToastMessage()}
               </p>
             </div>
             <div className="ml-auto pl-3">
               <button
                 onClick={() => setShowToast(false)}
-                className="inline-flex text-orange-400 hover:text-orange-600 dark:text-orange-300 dark:hover:text-orange-100"
+                className={`inline-flex ${!user ? 'text-orange-400 hover:text-orange-600 dark:text-orange-300 dark:hover:text-orange-100' : 'text-blue-400 hover:text-blue-600 dark:text-blue-300 dark:hover:text-blue-100'}`}
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
