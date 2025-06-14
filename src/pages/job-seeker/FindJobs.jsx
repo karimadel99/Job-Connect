@@ -10,6 +10,7 @@ import Pagination from '../../components/job-seeker/Pagination';
 import { toast } from 'react-hot-toast';
 import Loader from '../../components/Loader';
 import { useSavedJobs } from '../../contexts/SavedJobsContext';
+import { HiX, HiFilter, HiOutlineRefresh } from 'react-icons/hi';
 
 const FindJobs = () => {
   const [jobs, setJobs] = useState([]); 
@@ -21,6 +22,7 @@ const FindJobs = () => {
     experience: '',
     salary: '',
     jobType: [],
+    workplace: [],
     education: []
   });
   const [searchQuery, setSearchQuery] = useState('');
@@ -43,8 +45,9 @@ const FindJobs = () => {
   ];
 
   const salaryRanges = [
-    '$50 - $1000',
+    '$500 - $1000',
     '$1000 - $2000',
+    '$2000 - $3000',
     '$3000 - $4000',
     '$4000 - $6000',
     '$6000 - $8000',
@@ -57,7 +60,9 @@ const FindJobs = () => {
     'All',
     'Full Time',
     'Part Time',
-    'Contract Base'
+    'Contract Base',
+    'Internship',
+    'Temporary'
   ];
 
   const workPlace = [
@@ -84,6 +89,11 @@ const FindJobs = () => {
     fetchSavedJobs();
   }, [fetchSavedJobs]);
 
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedFilters, searchQuery, locationQuery, sortBy]);
+
   const fetchJobs = async () => {
     setIsLoading(true);
     try {
@@ -107,31 +117,63 @@ const FindJobs = () => {
     }
   };
 
-  // Filter, search, and sort jobs
+  // Enhanced filter, search, and sort functionality
   const getFilteredJobs = () => {
     let filteredJobs = [...jobs];
-    if (searchQuery) {
+
+    // Search by title and company
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
       filteredJobs = filteredJobs.filter(job => 
-        (job.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (job.company || '').toLowerCase().includes(searchQuery.toLowerCase())
+        (job.title || '').toLowerCase().includes(query) ||
+        (job.company || '').toLowerCase().includes(query) ||
+        (job.employer?.companyName || '').toLowerCase().includes(query)
       );
     }
-    if (locationQuery) {
+
+    // Filter by location
+    if (locationQuery.trim()) {
+      const location = locationQuery.toLowerCase().trim();
       filteredJobs = filteredJobs.filter(job => 
-        (job.location || '').toLowerCase().includes(locationQuery.toLowerCase())
+        (job.location || '').toLowerCase().includes(location)
       );
     }
+
+    // Filter by job type
     if (selectedFilters.jobType && selectedFilters.jobType.length > 0) {
-      filteredJobs = filteredJobs.filter(job => 
-        selectedFilters.jobType.includes(job.type || job.jobType || '')
-      );
+      filteredJobs = filteredJobs.filter(job => {
+        const jobType = job.jobType || job.type || '';
+        return selectedFilters.jobType.some(filterType => {
+          if (filterType === 'Full Time') return jobType.toLowerCase().includes('full') || jobType === 'fullTime';
+          if (filterType === 'Part Time') return jobType.toLowerCase().includes('part') || jobType === 'partTime';
+          if (filterType === 'Contract Base') return jobType.toLowerCase().includes('contract');
+          if (filterType === 'Internship') return jobType.toLowerCase().includes('intern');
+          if (filterType === 'Temporary') return jobType.toLowerCase().includes('temp');
+          return jobType.toLowerCase().includes(filterType.toLowerCase());
+        });
+      });
     }
+
+    // Filter by workplace
+    if (selectedFilters.workplace && selectedFilters.workplace.length > 0) {
+      filteredJobs = filteredJobs.filter(job => {
+        const workplace = job.workplace || job.workLocation || job.location || '';
+        return selectedFilters.workplace.some(filterPlace => {
+          if (filterPlace === 'On Site') return workplace.toLowerCase().includes('onsite') || workplace.toLowerCase().includes('on-site') || workplace.toLowerCase().includes('office');
+          if (filterPlace === 'Remote') return workplace.toLowerCase().includes('remote');
+          if (filterPlace === 'Hybrid') return workplace.toLowerCase().includes('hybrid');
+          return workplace.toLowerCase().includes(filterPlace.toLowerCase());
+        });
+      });
+    }
+
+    // Filter by experience
     if (selectedFilters.experience) {
       filteredJobs = filteredJobs.filter(job => {
-        const exp = job.yearsOfExperience || 0;
+        const exp = parseInt(job.yearsOfExperience) || 0;
         switch (selectedFilters.experience) {
           case 'Freshers':
-            return exp < 1;
+            return exp === 0 || exp < 1;
           case '1 - 2 Years':
             return exp >= 1 && exp <= 2;
           case '2 - 4 Years':
@@ -151,23 +193,87 @@ const FindJobs = () => {
         }
       });
     }
+
+    // Filter by salary range
     if (selectedFilters.salary) {
       filteredJobs = filteredJobs.filter(job => {
-        const jobSalary = parseInt((job.salary || '').replace(/[^0-9]/g, ''));
-        const [min, max] = selectedFilters.salary.split(' - ').map(s => parseInt(s.replace(/[^0-9]/g, '')));
-        return jobSalary >= min && (!max || jobSalary <= max);
+        const jobMinSalary = parseInt(job.minSalary) || 0;
+        const jobMaxSalary = parseInt(job.maxSalary) || jobMinSalary;
+        
+        // Parse filter range
+        if (selectedFilters.salary === '$15000+') {
+          return jobMinSalary >= 15000 || jobMaxSalary >= 15000;
+        }
+        
+        const rangeParts = selectedFilters.salary.replace(/\$/g, '').split(' - ');
+        if (rangeParts.length === 2) {
+          const minRange = parseInt(rangeParts[0]);
+          const maxRange = parseInt(rangeParts[1]);
+          
+          // Check if job salary overlaps with filter range
+          return (jobMinSalary <= maxRange && jobMaxSalary >= minRange) ||
+                 (jobMinSalary >= minRange && jobMinSalary <= maxRange) ||
+                 (jobMaxSalary >= minRange && jobMaxSalary <= maxRange);
+        }
+        
+        return true;
       });
     }
+
+    // Filter by education
     if (selectedFilters.education && selectedFilters.education.length > 0) {
       filteredJobs = filteredJobs.filter(job =>
-        selectedFilters.education.some(edu => (job.educationLevel || '').includes(edu))
+        selectedFilters.education.some(edu => {
+          const jobEducation = (job.educationLevel || job.education || '').toLowerCase();
+          const filterEducation = edu.toLowerCase();
+          
+          if (filterEducation.includes('high school')) return jobEducation.includes('high') || jobEducation.includes('secondary');
+          if (filterEducation.includes('bachelor')) return jobEducation.includes('bachelor') || jobEducation.includes('undergraduate');
+          if (filterEducation.includes('master')) return jobEducation.includes('master') || jobEducation.includes('postgraduate');
+          
+          return jobEducation.includes(filterEducation);
+        })
       );
     }
-    if (sortBy === 'latest') {
-      filteredJobs.sort((a, b) => new Date(b.postingDate) - new Date(a.postingDate));
-    } else if (sortBy === 'newest') {
-      filteredJobs.sort((a, b) => new Date(a.postingDate) - new Date(b.postingDate));
+
+    // Enhanced sorting
+    switch (sortBy) {
+      case 'latest':
+        filteredJobs.sort((a, b) => {
+          const dateA = new Date(a.postingDate || a.postedDate || a.createdAt || 0);
+          const dateB = new Date(b.postingDate || b.postedDate || b.createdAt || 0);
+          return dateB - dateA;
+        });
+        break;
+      case 'oldest':
+        filteredJobs.sort((a, b) => {
+          const dateA = new Date(a.postingDate || a.postedDate || a.createdAt || 0);
+          const dateB = new Date(b.postingDate || b.postedDate || b.createdAt || 0);
+          return dateA - dateB;
+        });
+        break;
+      case 'salary_high':
+        filteredJobs.sort((a, b) => {
+          const salaryA = Math.max(parseInt(a.minSalary) || 0, parseInt(a.maxSalary) || 0);
+          const salaryB = Math.max(parseInt(b.minSalary) || 0, parseInt(b.maxSalary) || 0);
+          return salaryB - salaryA;
+        });
+        break;
+      case 'salary_low':
+        filteredJobs.sort((a, b) => {
+          const salaryA = Math.min(parseInt(a.minSalary) || Infinity, parseInt(a.maxSalary) || Infinity);
+          const salaryB = Math.min(parseInt(b.minSalary) || Infinity, parseInt(b.maxSalary) || Infinity);
+          return salaryA - salaryB;
+        });
+        break;
+      case 'title':
+        filteredJobs.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+        break;
+      default:
+        // Keep original order
+        break;
     }
+
     return filteredJobs;
   };
 
@@ -184,7 +290,9 @@ const FindJobs = () => {
   const handleAdvancedFilterChange = (filterType, value) => {
     setSelectedFilters(prev => {
       const newFilters = { ...prev };
-      if (filterType === 'jobType' || filterType === 'education') {
+      
+      // Handle array-based filters (jobType, workplace, education)
+      if (['jobType', 'workplace', 'education'].includes(filterType)) {
         if (value === 'All') {
           newFilters[filterType] = [];
         } else {
@@ -195,35 +303,70 @@ const FindJobs = () => {
             newFilters[filterType] = [...currentFilters, value];
           }
         }
-      } else {
+      } 
+      // Handle single-value filters (experience, salary)
+      else {
         newFilters[filterType] = value === newFilters[filterType] ? '' : value;
       }
+      
       return newFilters;
     });
   };
 
   const handleSearch = (e) => {
     e.preventDefault();
+    // Search is handled by useEffect on state change
   };
+
+  // Get active filter count for better UX
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (selectedFilters.experience) count++;
+    if (selectedFilters.salary) count++;
+    if (selectedFilters.jobType?.length > 0) count++;
+    if (selectedFilters.workplace?.length > 0) count++;
+    if (selectedFilters.education?.length > 0) count++;
+    if (searchQuery.trim()) count++;
+    if (locationQuery.trim()) count++;
+    return count;
+  };
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    setSearchQuery('');
+    setLocationQuery('');
+    setSelectedFilters({
+      experience: '',
+      salary: '',
+      jobType: [],
+      workplace: [],
+      education: []
+    });
+    setSortBy('latest');
+    setCurrentPage(1);
+    toast.success('All filters cleared');
+  };
+
+  const activeFilterCount = getActiveFilterCount();
 
   return (
     <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 min-h-screen bg-light-background-tertiary dark:bg-dark-background-primary">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-light-text-primary dark:text-dark-text-primary">
-          Find Job
+          Find Jobs
         </h1>
         <div className="text-sm">
           <Link to="/jobseeker/dashboard" className="text-light-text-secondary dark:text-dark-text-secondary hover:text-light-primary-600 dark:hover:text-dark-primary-400 transition-colors duration-200">
             Home
           </Link>
           <span className="mx-2 text-light-text-secondary dark:text-dark-text-secondary">/</span>
-          <span className="text-light-text-primary dark:text-dark-text-primary">Find Job</span>
+          <span className="text-light-text-primary dark:text-dark-text-primary">Find Jobs</span>
         </div>
       </div>
 
       {/* Search Section */}
-      <div className="bg-light-background-primary dark:bg-dark-background-secondary rounded-lg shadow-sm p-6 mb-8 border border-light-neutral-200 dark:border-dark-neutral-700">
+      <div className="bg-light-background-primary dark:bg-dark-background-secondary rounded-lg shadow-sm p-6 mb-6 border border-light-neutral-200 dark:border-dark-neutral-700">
         <SearchBar
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -244,6 +387,91 @@ const FindJobs = () => {
           educationLevels={educationLevels}
         />
       </div>
+
+      {/* Active Filters Display */}
+      {activeFilterCount > 0 && (
+        <div className="bg-light-background-primary dark:bg-dark-background-secondary rounded-lg shadow-sm p-4 mb-6 border border-light-neutral-200 dark:border-dark-neutral-700">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary flex items-center gap-2">
+                <HiFilter className="w-4 h-4" />
+                Active Filters ({activeFilterCount}):
+              </span>
+              
+              {searchQuery && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-light-primary-100 text-light-primary-800 dark:bg-dark-primary-900/30 dark:text-dark-primary-300">
+                  Search: "{searchQuery}"
+                  <button onClick={() => setSearchQuery('')} className="hover:text-light-primary-600 dark:hover:text-dark-primary-400">
+                    <HiX className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              
+              {locationQuery && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-light-primary-100 text-light-primary-800 dark:bg-dark-primary-900/30 dark:text-dark-primary-300">
+                  Location: "{locationQuery}"
+                  <button onClick={() => setLocationQuery('')} className="hover:text-light-primary-600 dark:hover:text-dark-primary-400">
+                    <HiX className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              
+              {selectedFilters.experience && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-light-primary-100 text-light-primary-800 dark:bg-dark-primary-900/30 dark:text-dark-primary-300">
+                  Experience: {selectedFilters.experience}
+                  <button onClick={() => handleAdvancedFilterChange('experience', selectedFilters.experience)} className="hover:text-light-primary-600 dark:hover:text-dark-primary-400">
+                    <HiX className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              
+              {selectedFilters.salary && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-light-primary-100 text-light-primary-800 dark:bg-dark-primary-900/30 dark:text-dark-primary-300">
+                  Salary: {selectedFilters.salary}
+                  <button onClick={() => handleAdvancedFilterChange('salary', selectedFilters.salary)} className="hover:text-light-primary-600 dark:hover:text-dark-primary-400">
+                    <HiX className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              
+              {selectedFilters.jobType?.map(type => (
+                <span key={type} className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-light-primary-100 text-light-primary-800 dark:bg-dark-primary-900/30 dark:text-dark-primary-300">
+                  Job: {type}
+                  <button onClick={() => handleAdvancedFilterChange('jobType', type)} className="hover:text-light-primary-600 dark:hover:text-dark-primary-400">
+                    <HiX className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+              
+              {selectedFilters.workplace?.map(place => (
+                <span key={place} className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-light-primary-100 text-light-primary-800 dark:bg-dark-primary-900/30 dark:text-dark-primary-300">
+                  Work: {place}
+                  <button onClick={() => handleAdvancedFilterChange('workplace', place)} className="hover:text-light-primary-600 dark:hover:text-dark-primary-400">
+                    <HiX className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+              
+              {selectedFilters.education?.map(edu => (
+                <span key={edu} className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-light-primary-100 text-light-primary-800 dark:bg-dark-primary-900/30 dark:text-dark-primary-300">
+                  Education: {edu}
+                  <button onClick={() => handleAdvancedFilterChange('education', edu)} className="hover:text-light-primary-600 dark:hover:text-dark-primary-400">
+                    <HiX className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+            
+            <button
+              onClick={clearAllFilters}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-light-error dark:text-dark-error hover:bg-light-error/10 dark:hover:bg-dark-error/10 rounded-lg transition-colors duration-200"
+            >
+              <HiOutlineRefresh className="w-4 h-4" />
+              Clear All
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Results */}
       <div className="bg-light-background-primary dark:bg-dark-background-secondary rounded-lg shadow-sm border border-light-neutral-200 dark:border-dark-neutral-700">
@@ -275,24 +503,29 @@ const FindJobs = () => {
                 ))
               ) : (
                 <div className="text-center py-12 px-4 col-span-2">
-                  <p className="text-light-text-secondary dark:text-dark-text-secondary mb-2">
-                    No jobs found matching your criteria.
-                  </p>
-                  <button 
-                    onClick={() => {
-                      setSearchQuery('');
-                      setLocationQuery('');
-                      setSelectedFilters({
-                        experience: '',
-                        salary: '',
-                        jobType: [],
-                        education: []
-                      });
-                    }}
-                    className="text-light-primary-600 dark:text-dark-primary-400 hover:text-light-primary-700 dark:hover:text-dark-primary-500 font-medium"
-                  >
-                    Clear all filters
-                  </button>
+                  <div className="max-w-md mx-auto">
+                    <div className="w-24 h-24 bg-light-neutral-100 dark:bg-dark-neutral-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <HiFilter className="w-10 h-10 text-light-neutral-400 dark:text-dark-neutral-400" />
+                    </div>
+                    <h3 className="text-lg font-medium text-light-text-primary dark:text-dark-text-primary mb-2">
+                      No jobs found
+                    </h3>
+                    <p className="text-light-text-secondary dark:text-dark-text-secondary mb-4">
+                      {activeFilterCount > 0 
+                        ? "Try adjusting your filters or search criteria to find more opportunities."
+                        : "No jobs are currently available. Please check back later."
+                      }
+                    </p>
+                    {activeFilterCount > 0 && (
+                      <button 
+                        onClick={clearAllFilters}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-light-primary-600 dark:bg-dark-primary-400 text-white rounded-lg hover:bg-light-primary-700 dark:hover:bg-dark-primary-500 font-medium transition-colors duration-200"
+                      >
+                        <HiOutlineRefresh className="w-4 h-4" />
+                        Clear all filters
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

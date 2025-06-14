@@ -120,6 +120,45 @@ export const updateSeekerProfile = async (profileData) => {
   }
 };
 
+export const updateSeekerProfileDirect = async (profileData) => {
+  try {
+    console.log('API: Direct profile update with data:', profileData);
+    
+    // Transform arrays to ensure proper format for API
+    const transformedData = { ...profileData };
+    
+    // Handle array fields - ensure they're in the right format
+    const arrayFields = ['skills', 'certifications', 'companyWorkedAt', 'workedAs'];
+    arrayFields.forEach(field => {
+      if (transformedData[field] && Array.isArray(transformedData[field])) {
+        // Ensure arrays are properly formatted for the API
+        transformedData[field] = transformedData[field].map(item => {
+          if (typeof item === 'string') {
+            // Convert string to proper object format
+            if (field === 'skills') return { skillName: item };
+            if (field === 'certifications') return { certificationName: item };
+            if (field === 'companyWorkedAt') return { companyName: item };
+            if (field === 'workedAs') return { jobTitle: item };
+          }
+          return item; // Already in object format
+        });
+      }
+    });
+    
+    console.log('API: Transformed data for direct update:', transformedData);
+    
+    const response = await apiClient.put("/api/JobSeeker/UpdateSeekerProfile", transformedData, {
+      headers: { "Content-Type": "application/json" },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('API Error Response:', error.response?.data);
+    console.error('API Error Status:', error.response?.status);
+    console.error('Full error:', error);
+    return { error: error.response?.data?.message || error.response?.data || "Failed to update seeker profile" };
+  }
+};
+
 export const deleteSeekerProfile = async () => {
   try {
     const response = await apiClient.delete("/api/JobSeeker/DeleteSeekerProfile");
@@ -225,14 +264,39 @@ export async function getRecommendedJobs(seekerId, topN = 10) {
   }
 }
 
+// Debug helper function to understand the response structure
+const debugResponse = (response) => {
+  console.log('=== RESPONSE DEBUG START ===');
+  console.log('Full response object:', response);
+  console.log('Response status:', response.status);
+  console.log('Response headers:', response.headers);
+  console.log('Response data:', response.data);
+  console.log('Response data type:', typeof response.data);
+  
+  if (response.data && typeof response.data === 'object') {
+    console.log('Response data keys:', Object.keys(response.data));
+    console.log('Response data entries:', Object.entries(response.data));
+  }
+  console.log('=== RESPONSE DEBUG END ===');
+};
+
 export const parseResume = async (formData) => {
   try {
     console.log('API: Sending resume for parsing...');
     
     // Create a new FormData with the same file
     const file = formData.get('resume');
+    console.log('API: File extracted from original FormData:', file ? { name: file.name, type: file.type, size: file.size } : 'null');
+    
+    if (!file) {
+      return { error: 'No file found in FormData' };
+    }
+    
     const mlFormData = new FormData();
-    mlFormData.append('file', file);
+    mlFormData.append('resume', file);
+    
+    // Debug: Log what we're sending
+    console.log('API: FormData entries for ML model:', Array.from(mlFormData.entries()).map(([key, value]) => [key, value instanceof File ? { name: value.name, type: value.type, size: value.size } : value]));
 
     // Send to the local ML model endpoint
     const response = await axios.post(
@@ -246,8 +310,41 @@ export const parseResume = async (formData) => {
       }
     );
     
-    console.log('API: Parse response received:', response);
-    return response.data;
+    // Use debug helper to understand the response structure
+    debugResponse(response);
+    
+    // Handle different response structures
+    let parsedData = response.data;
+    
+    // If response.data is wrapped in another object, extract the actual parsed data
+    if (parsedData && typeof parsedData === 'object') {
+      // Check if it has the expected structure directly
+      if (parsedData.SKILLS || parsedData.LOCATION || parsedData.NAME) {
+        console.log('API: Direct structure detected');
+        return parsedData;
+      }
+      
+      // Check if it's wrapped in a 'data' property
+      if (parsedData.data) {
+        console.log('API: Nested data structure detected');
+        return parsedData.data;
+      }
+      
+      // Check if it's wrapped in a 'result' property
+      if (parsedData.result) {
+        console.log('API: Result wrapper structure detected');
+        return parsedData.result;
+      }
+      
+      // Check if it's wrapped in a 'parsed_data' property
+      if (parsedData.parsed_data) {
+        console.log('API: Parsed_data wrapper structure detected');
+        return parsedData.parsed_data;
+      }
+    }
+    
+    console.log('API: Returning original response data');
+    return parsedData;
   } catch (error) {
     console.error('API: Resume parsing error details:', {
       message: error.message,
@@ -273,36 +370,198 @@ export const parseResume = async (formData) => {
 export const updateProfileFromParsedResume = async (parsedData) => {
   try {
     console.log('API: Updating profile with parsed resume data...');
+    console.log('API: Raw parsed data structure:', parsedData);
+    console.log('API: Parsed data type:', typeof parsedData);
+    
+    if (parsedData && typeof parsedData === 'object') {
+      console.log('API: Parsed data keys:', Object.keys(parsedData));
+    }
+    
+    // Validate that parsedData exists and is an object
+    if (!parsedData || typeof parsedData !== 'object') {
+      console.error('API: Invalid parsed data - not an object:', parsedData);
+      console.error('API: Expected object with keys like SKILLS, LOCATION, etc.');
+      return { error: 'Invalid parsed data received from resume parsing service. Expected object with extracted data.' };
+    }
+    
+    // Check if the object has at least one of the expected properties
+    const expectedKeys = ['SKILLS', 'LOCATION', 'NAME', 'DEGREE', 'CERTIFICATION', 'COMPANIES WORKED AT', 'WORKED AS'];
+    const hasExpectedData = expectedKeys.some(key => parsedData.hasOwnProperty(key));
+    
+    if (!hasExpectedData) {
+      console.error('API: Parsed data does not contain expected properties:', Object.keys(parsedData));
+      console.error('API: Expected one of:', expectedKeys);
+      return { error: 'Parsed data does not contain recognizable resume information' };
+    }
+    
+    // Helper function to safely get array values
+    const safeGetArray = (data, key) => {
+      const value = data[key];
+      if (!value) return [];
+      if (Array.isArray(value)) return value;
+      if (typeof value === 'string') return [value];
+      return [];
+    };
+    
+    // Helper function to safely get first string value
+    const safeGetFirst = (data, key) => {
+      const array = safeGetArray(data, key);
+      return array.length > 0 ? array[0] : null;
+    };
+    
+    // Helper function to clean and filter text
+    const cleanText = (text) => {
+      if (!text) return '';
+      return text.trim()
+        .replace(/[•\-\n\r\t]/g, ' ') // Remove bullets, dashes, newlines
+        .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+        .trim();
+    };
+    
+    // Extract and clean arrays
+    const skills = safeGetArray(parsedData, 'SKILLS')
+      .concat(safeGetArray(parsedData, 'skills'))
+      .concat(safeGetArray(parsedData, 'SKILL'))
+      .concat(safeGetArray(parsedData, 'skill'))
+      .map(skill => cleanText(skill))
+      .filter(skill => skill && skill.length > 1) // Filter out single characters or empty
+      .map(skill => ({ skillName: skill }));
+    
+    const certifications = safeGetArray(parsedData, 'CERTIFICATION')
+      .concat(safeGetArray(parsedData, 'certification'))
+      .concat(safeGetArray(parsedData, 'CERTIFICATIONS'))
+      .concat(safeGetArray(parsedData, 'certifications'))
+      .map(cert => cleanText(cert))
+      .filter(cert => cert && cert.length > 3) // Filter out very short entries
+      .map(cert => ({ certificationName: cert }));
+    
+    const companies = safeGetArray(parsedData, 'COMPANIES WORKED AT')
+      .concat(safeGetArray(parsedData, 'companies worked at'))
+      .concat(safeGetArray(parsedData, 'COMPANY'))
+      .concat(safeGetArray(parsedData, 'company'))
+      .concat(safeGetArray(parsedData, 'COMPANIES'))
+      .concat(safeGetArray(parsedData, 'companies'))
+      .map(company => cleanText(company))
+      .filter(company => company && company.length > 2)
+      .map(company => ({ companyName: company }));
+    
+    const positions = safeGetArray(parsedData, 'WORKED AS')
+      .concat(safeGetArray(parsedData, 'worked as'))
+      .concat(safeGetArray(parsedData, 'JOB TITLE'))
+      .concat(safeGetArray(parsedData, 'job title'))
+      .concat(safeGetArray(parsedData, 'POSITION'))
+      .concat(safeGetArray(parsedData, 'position'))
+      .map(position => cleanText(position))
+      .filter(position => position && position.length > 3)
+      .map(position => ({ jobTitle: position }));
+    
+    // Extract basic info
+    const address = cleanText(safeGetFirst(parsedData, 'LOCATION') || 
+                             safeGetFirst(parsedData, 'location') || 
+                             safeGetFirst(parsedData, 'ADDRESS') || 
+                             safeGetFirst(parsedData, 'address'));
+    
+    const degree = cleanText(safeGetFirst(parsedData, 'DEGREE') || 
+                            safeGetFirst(parsedData, 'degree') || 
+                            safeGetFirst(parsedData, 'EDUCATION') || 
+                            safeGetFirst(parsedData, 'education'));
+    
+    // Infer current/desired job from positions
+    const currentOrDesiredJob = positions.length > 0 ? 
+      cleanText(positions[0].jobTitle) : null;
+    
+    // Generate a simple bio from extracted data
+    const name = cleanText(safeGetFirst(parsedData, 'NAME') || 
+                          safeGetFirst(parsedData, 'name'));
+    
+    let bio = '';
+    if (name || degree || positions.length > 0 || skills.length > 0) {
+      const bioparts = [];
+      
+      if (name) bioparts.push(`I am ${name}`);
+      if (degree) bioparts.push(`with a ${degree}`);
+      if (positions.length > 0) {
+        const jobTitles = positions.slice(0, 2).map(p => p.jobTitle).join(' and ');
+        bioparts.push(`experienced as ${jobTitles}`);
+      }
+      if (skills.length > 0) {
+        const topSkills = skills.slice(0, 5).map(s => s.skillName).join(', ');
+        bioparts.push(`skilled in ${topSkills}`);
+      }
+      
+      bio = bioparts.join(', ') + '.';
+      
+      // Clean up bio formatting
+      bio = bio.replace(/^I am ,/, 'I am')
+               .replace(/,\s*,/g, ',')
+               .replace(/,\s*\./g, '.')
+               .replace(/^,\s*/, '')
+               .trim();
+    }
     
     // Transform the parsed data into profile format
     const profileData = {
       // Basic info
-      address: parsedData.LOCATION?.[0] || null,
+      address: address || null,
       
       // Education
-      degree: parsedData.DEGREE?.[0] || null,
+      degree: degree || null,
       
-      // Skills
-      skills: parsedData.SKILLS?.map(skill => ({
-        skillName: skill.trim()
-      })) || [],
+      // Inferred fields
+      currentOrDesiredJob: currentOrDesiredJob || null,
+      bio: bio || null,
       
-      // Certifications
-      certifications: parsedData.CERTIFICATION?.map(cert => ({
-        certificationName: cert.trim()
-      })) || [],
-      
-      // Work Experience
-      companyWorkedAt: parsedData["COMPANIES WORKED AT"]?.map(company => ({
-        companyName: company.trim()
-      })) || [],
-      
-      workedAs: parsedData["WORKED AS"]?.map(position => ({
-        jobTitle: position.trim()
-      })) || []
+      // Arrays
+      skills: skills,
+      certifications: certifications,
+      companyWorkedAt: companies,
+      workedAs: positions
     };
+    
+    console.log('API: Transformed profile data:', profileData);
+    console.log('API: Extracted data summary:', {
+      address: !!address,
+      degree: !!degree,
+      currentOrDesiredJob: !!currentOrDesiredJob,
+      bio: !!bio,
+      skillsCount: skills.length,
+      certificationsCount: certifications.length,
+      companiesCount: companies.length,
+      positionsCount: positions.length
+    });
+    
+    // Only send fields that have actual data
+    const filteredProfileData = {};
+    
+    // Add non-empty string fields
+    if (profileData.address) filteredProfileData.address = profileData.address;
+    if (profileData.degree) filteredProfileData.degree = profileData.degree;
+    if (profileData.currentOrDesiredJob) filteredProfileData.currentOrDesiredJob = profileData.currentOrDesiredJob;
+    if (profileData.bio) filteredProfileData.bio = profileData.bio;
+    
+    // Add arrays only if they have data
+    if (profileData.skills && profileData.skills.length > 0) {
+      filteredProfileData.skills = profileData.skills;
+    }
+    if (profileData.certifications && profileData.certifications.length > 0) {
+      filteredProfileData.certifications = profileData.certifications;
+    }
+    if (profileData.companyWorkedAt && profileData.companyWorkedAt.length > 0) {
+      filteredProfileData.companyWorkedAt = profileData.companyWorkedAt;
+    }
+    if (profileData.workedAs && profileData.workedAs.length > 0) {
+      filteredProfileData.workedAs = profileData.workedAs;
+    }
+    
+    console.log('API: Filtered profile data to send:', filteredProfileData);
+    
+    // If no useful data was extracted, return early
+    if (Object.keys(filteredProfileData).length === 0) {
+      console.log('API: No useful data extracted from resume');
+      return { error: 'No extractable profile data found in the resume' };
+    }
 
-    const response = await apiClient.put("/api/JobSeeker/UpdateSeekerProfile", profileData, {
+    const response = await apiClient.put("/api/JobSeeker/UpdateSeekerProfile", filteredProfileData, {
       headers: { "Content-Type": "application/json" },
     });
     console.log('API: Profile update with parsed data response:', response);

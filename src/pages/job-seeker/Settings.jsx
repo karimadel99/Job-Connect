@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import { toast } from 'react-hot-toast';
-import { getSeekerProfile, updateSeekerProfile, deleteSeekerProfile, uploadResume, getResumes, deleteResume, parseResume, updateProfileFromParsedResume } from '../../api/jobSeekerApi';
+import { getSeekerProfile, updateSeekerProfile, updateSeekerProfileDirect, deleteSeekerProfile, uploadResume, getResumes, deleteResume, parseResume, updateProfileFromParsedResume } from '../../api/jobSeekerApi';
 import Loader from '../../components/Loader';
 import SkillsList from '../../components/job-seeker/profile/SkillsList';
 import CertificationsList from '../../components/job-seeker/profile/CertificationsList';
@@ -203,24 +203,126 @@ export default function Settings() {
         return;
       }
 
-      console.log('Parse successful, parsed data:', parseResponse.data);
+      console.log('Parse successful, raw parseResponse:', parseResponse);
+      console.log('Parse successful, parseResponse type:', typeof parseResponse);
+      console.log('Parse successful, parseResponse keys:', Object.keys(parseResponse || {}));
+      
+      // The parsed data should be the parseResponse itself, not parseResponse.data
+      const actualParsedData = parseResponse;
 
       // Finally, update the profile with parsed data
       console.log('Updating profile with parsed data...');
-      const updateResponse = await updateProfileFromParsedResume(parseResponse.data);
-      if (updateResponse.error) {
-        console.error('Profile update failed with error:', updateResponse.error);
-        toast.error('Resume parsed but profile update failed: ' + updateResponse.error);
-      } else {
-        console.log('Profile updated successfully with parsed data');
-        toast.success('Profile updated with resume data!');
+      
+      // Transform parsed data directly to updateSeekerProfile format
+      const transformParsedDataForDirectUpdate = (parsedData) => {
+        // Helper functions (same as in updateProfileFromParsedResume)
+        const safeGetArray = (data, key) => {
+          const value = data[key];
+          if (!value) return [];
+          if (Array.isArray(value)) return value;
+          if (typeof value === 'string') return [value];
+          return [];
+        };
         
-        // Refresh the profile data to show the updates
-        const refreshedProfile = await getSeekerProfile();
-        if (!refreshedProfile.error) {
-          setProfileData(refreshedProfile.data);
+        const safeGetFirst = (data, key) => {
+          const array = safeGetArray(data, key);
+          return array.length > 0 ? array[0] : null;
+        };
+        
+        const cleanText = (text) => {
+          if (!text) return '';
+          return text.trim()
+            .replace(/[•\-\n\r\t]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+        };
+        
+        // Extract and clean data
+        const skills = safeGetArray(parsedData, 'SKILLS')
+          .concat(safeGetArray(parsedData, 'skills'))
+          .map(skill => cleanText(skill))
+          .filter(skill => skill && skill.length > 1)
+          .map(skill => ({ skillName: skill }));
+        
+        const certifications = safeGetArray(parsedData, 'CERTIFICATION')
+          .concat(safeGetArray(parsedData, 'certification'))
+          .map(cert => cleanText(cert))
+          .filter(cert => cert && cert.length > 3)
+          .map(cert => ({ certificationName: cert }));
+        
+        const companies = safeGetArray(parsedData, 'COMPANIES WORKED AT')
+          .concat(safeGetArray(parsedData, 'company'))
+          .map(company => cleanText(company))
+          .filter(company => company && company.length > 2)
+          .map(company => ({ companyName: company }));
+        
+        const positions = safeGetArray(parsedData, 'WORKED AS')
+          .concat(safeGetArray(parsedData, 'position'))
+          .map(position => cleanText(position))
+          .filter(position => position && position.length > 3)
+          .map(position => ({ jobTitle: position }));
+        
+        const address = cleanText(safeGetFirst(parsedData, 'LOCATION'));
+        const degree = cleanText(safeGetFirst(parsedData, 'DEGREE'));
+        const currentOrDesiredJob = positions.length > 0 ? cleanText(positions[0].jobTitle) : null;
+        
+        // Generate bio
+        const name = cleanText(safeGetFirst(parsedData, 'NAME'));
+        let bio = '';
+        if (name || degree || positions.length > 0 || skills.length > 0) {
+          const bioparts = [];
+          if (name) bioparts.push(`I am ${name}`);
+          if (degree) bioparts.push(`with a ${degree}`);
+          if (positions.length > 0) {
+            const jobTitles = positions.slice(0, 2).map(p => p.jobTitle).join(' and ');
+            bioparts.push(`experienced as ${jobTitles}`);
+          }
+          if (skills.length > 0) {
+            const topSkills = skills.slice(0, 5).map(s => s.skillName).join(', ');
+            bioparts.push(`skilled in ${topSkills}`);
+          }
+          bio = bioparts.join(', ') + '.';
+          bio = bio.replace(/^I am ,/, 'I am').replace(/,\s*,/g, ',').replace(/,\s*\./g, '.').replace(/^,\s*/, '').trim();
         }
-      }
+        
+        // Return only fields with data
+        const profileData = {};
+        if (address) profileData.address = address;
+        if (degree) profileData.degree = degree;
+        if (currentOrDesiredJob) profileData.currentOrDesiredJob = currentOrDesiredJob;
+        if (bio) profileData.bio = bio;
+        if (skills.length > 0) profileData.skills = skills;
+        if (certifications.length > 0) profileData.certifications = certifications;
+        if (companies.length > 0) profileData.companyWorkedAt = companies;
+        if (positions.length > 0) profileData.workedAs = positions;
+        
+        return profileData;
+      };
+      
+      const parsedProfileData = transformParsedDataForDirectUpdate(actualParsedData);
+      console.log('Parsed profile data to send:', parsedProfileData);
+      console.log('Number of fields to update:', Object.keys(parsedProfileData).length);
+      console.log('Fields being updated:', Object.keys(parsedProfileData));
+      
+      if (Object.keys(parsedProfileData).length === 0) {
+        toast.error('Resume uploaded and parsed, but no profile data could be extracted from it.');
+              } else {
+          // Use the direct update function to ensure parsed data is sent regardless of form state
+          const updateResponse = await updateSeekerProfileDirect(parsedProfileData);
+          if (updateResponse.error) {
+            console.error('Profile update failed with error:', updateResponse.error);
+            toast.error('Resume parsed but profile update failed: ' + updateResponse.error);
+          } else {
+            console.log('Profile updated successfully with parsed data');
+            toast.success('Resume uploaded and profile updated with extracted data!');
+            
+            // Refresh the profile data to show the updates
+            const refreshedProfile = await getSeekerProfile();
+            if (!refreshedProfile.error) {
+              setProfileData(refreshedProfile.data);
+            }
+          }
+        }
       
       // Refresh the resumes list
       console.log('Refreshing resume list...');
@@ -258,205 +360,101 @@ export default function Settings() {
   const handleSubmit = async (values, { setSubmitting }) => {
     console.log('handleSubmit called with values:', values);
     console.log('setSubmitting function:', setSubmitting);
+    
     try {
-      // Detect changes by comparing with original profile data
-      const changedValues = {};
-      const originalValues = transformProfileData(profileData);
+      // Send the ENTIRE profile, no change detection
+      console.log('Sending entire profile to API...');
       
-             // Compare each field and only include changed ones
-       Object.keys(values).forEach(key => {
-         const currentValue = values[key];
-         const originalValue = originalValues[key];
-         
-         // For arrays, do deep comparison
-         if (Array.isArray(currentValue)) {
-           // Normalize arrays for comparison (remove any undefined/null values)
-           const normalizedCurrent = currentValue.filter(item => item && typeof item === 'object');
-           const normalizedOriginal = (originalValue || []).filter(item => item && typeof item === 'object');
-           
-           if (JSON.stringify(normalizedCurrent) !== JSON.stringify(normalizedOriginal)) {
-             changedValues[key] = currentValue;
-             console.log(`Array ${key} changed:`, {
-               original: normalizedOriginal,
-               current: normalizedCurrent
-             });
-           }
-         } else {
-           // For regular fields, compare values
-           if (currentValue !== originalValue) {
-             changedValues[key] = currentValue;
-           }
-         }
-       });
+      // Transform all values for API
+      const allValues = { ...values };
       
-      // If no changes detected, show message and return
-      if (Object.keys(changedValues).length === 0) {
-        toast('No changes detected');
-        setSubmitting(false);
-        return;
-      }
-      
-      console.log('Detected changes:', changedValues);
-      
-      // Transform changed values for API
-      const transformedValues = { ...changedValues };
-      
-      // Convert dateOfBirth to ISO format if it exists and was changed
-      if (transformedValues.hasOwnProperty('dateOfBirth')) {
-        if (transformedValues.dateOfBirth && transformedValues.dateOfBirth.trim() !== '') {
-          try {
-            // For date inputs that come as YYYY-MM-DD, convert to ISO string
-            const date = new Date(transformedValues.dateOfBirth + 'T00:00:00.000Z');
-            transformedValues.dateOfBirth = date.toISOString();
-          } catch (e) {
-            console.error('Error parsing dateOfBirth:', e);
-            transformedValues.dateOfBirth = null;
-          }
-        } else {
-          transformedValues.dateOfBirth = null;
+      // Convert dateOfBirth to ISO format if it exists
+      if (allValues.dateOfBirth && allValues.dateOfBirth.trim() !== '') {
+        try {
+          // For date inputs that come as YYYY-MM-DD, convert to ISO string
+          const date = new Date(allValues.dateOfBirth + 'T00:00:00.000Z');
+          allValues.dateOfBirth = date.toISOString();
+        } catch (e) {
+          console.error('Error parsing dateOfBirth:', e);
+          allValues.dateOfBirth = null;
         }
+      } else {
+        allValues.dateOfBirth = null;
       }
       
       // Convert empty string fields to null for API compatibility
       const fieldsToNullify = ['portfolio', 'facebookLink', 'twitterLink', 'instagramLink', 'linkedInLink', 'address', 'nationality', 'maritalStatus', 'gender', 'degree', 'currentOrDesiredJob', 'bio', 'coverLetter', 'education', 'collegeName', 'university', 'phoneNumber'];
       fieldsToNullify.forEach(field => {
-        if (transformedValues.hasOwnProperty(field)) {
-          if (transformedValues[field] === '' || (typeof transformedValues[field] === 'string' && transformedValues[field].trim() === '')) {
-            transformedValues[field] = null;
-          }
+        if (allValues[field] === '' || (typeof allValues[field] === 'string' && allValues[field].trim() === '')) {
+          allValues[field] = null;
         }
       });
       
       // Handle yearsOfExperience - ensure it's a number
-      if (transformedValues.hasOwnProperty('yearsOfExperience')) {
-        if (transformedValues.yearsOfExperience === '' || transformedValues.yearsOfExperience === null) {
-          transformedValues.yearsOfExperience = 0;
-        } else {
-          transformedValues.yearsOfExperience = Number(transformedValues.yearsOfExperience);
-        }
+      if (allValues.yearsOfExperience === '' || allValues.yearsOfExperience === null) {
+        allValues.yearsOfExperience = 0;
+      } else {
+        allValues.yearsOfExperience = Number(allValues.yearsOfExperience);
       }
       
-             // Handle array fields - detect additions, deletions, and updates
-       const arrayFields = ['skills', 'certifications', 'companyWorkedAt', 'workedAs'];
-       arrayFields.forEach(field => {
-         if (transformedValues.hasOwnProperty(field)) {
-           const currentArray = transformedValues[field] || [];
-           const originalArray = originalValues[field] || [];
-           
-           console.log(`Processing ${field} array:`, {
-             current: currentArray,
-             original: originalArray
-           });
-           
-           const resultArray = [];
-           
-           // Transform arrays to match API format and handle add/update/delete operations
-           if (field === 'skills') {
-             // Add current skills (new and updated)
-             currentArray
-               .filter(item => item && typeof item === 'object')
-               .forEach(item => {
-                 resultArray.push({
-                   skillName: (item.skillName || "").toString()
-                 });
-               });
-             
-             // Add deleted skills with empty values
-             originalArray
-               .filter(item => item && typeof item === 'object')
-               .forEach(originalItem => {
-                 const stillExists = currentArray.some(currentItem => 
-                   currentItem.skillName === originalItem.skillName
-                 );
-                 if (!stillExists) {
-                   resultArray.push({
-                     skillName: ""
-                   });
-                 }
-               });
-               
-           } else if (field === 'certifications') {
-             // Add current certifications (new and updated)
-             currentArray
-               .filter(item => item && typeof item === 'object')
-               .forEach(item => {
-                 resultArray.push({
-                   certificationName: (item.certificationName || "").toString()
-                 });
-               });
-             
-             // Add deleted certifications with empty values
-             originalArray
-               .filter(item => item && typeof item === 'object')
-               .forEach(originalItem => {
-                 const stillExists = currentArray.some(currentItem => 
-                   currentItem.certificationName === originalItem.certificationName
-                 );
-                 if (!stillExists) {
-                   resultArray.push({
-                     certificationName: ""
-                   });
-                 }
-               });
-               
-           } else if (field === 'companyWorkedAt') {
-             // Add current companies (new and updated)
-             currentArray
-               .filter(item => item && typeof item === 'object')
-               .forEach(item => {
-                 resultArray.push({
-                   companyName: (item.companyName || "").toString()
-                 });
-               });
-             
-             // Add deleted companies with empty values
-             originalArray
-               .filter(item => item && typeof item === 'object')
-               .forEach(originalItem => {
-                 const stillExists = currentArray.some(currentItem => 
-                   currentItem.companyName === originalItem.companyName
-                 );
-                 if (!stillExists) {
-                   resultArray.push({
-                     companyName: ""
-                   });
-                 }
-               });
-               
-           } else if (field === 'workedAs') {
-             // Add current positions (new and updated)
-             currentArray
-               .filter(item => item && typeof item === 'object')
-               .forEach(item => {
-                 resultArray.push({
-                   jobTitle: (item.jobTitle || "").toString()
-                 });
-               });
-             
-             // Add deleted positions with empty values
-             originalArray
-               .filter(item => item && typeof item === 'object')
-               .forEach(originalItem => {
-                 const stillExists = currentArray.some(currentItem => 
-                   currentItem.jobTitle === originalItem.jobTitle
-                 );
-                 if (!stillExists) {
-                   resultArray.push({
-                     jobTitle: ""
-                   });
-                 }
-               });
-           }
-           
-           transformedValues[field] = resultArray;
-           console.log(`Final ${field} for API:`, transformedValues[field]);
-         }
-       });
+      // Handle array fields - clean and format them properly
+      const arrayFields = ['skills', 'certifications', 'companyWorkedAt', 'workedAs'];
+      arrayFields.forEach(field => {
+        const currentArray = allValues[field] || [];
+        
+        console.log(`Processing ${field} array:`, {
+          current: currentArray,
+          count: currentArray.length
+        });
+        
+        // Clean and format the arrays
+        const resultArray = [];
+        
+        if (field === 'skills') {
+          currentArray
+            .filter(item => item && typeof item === 'object' && item.skillName && item.skillName.trim())
+            .forEach(item => {
+              resultArray.push({
+                skillName: item.skillName.toString().trim()
+              });
+            });
+            
+        } else if (field === 'certifications') {
+          currentArray
+            .filter(item => item && typeof item === 'object' && item.certificationName && item.certificationName.trim())
+            .forEach(item => {
+              resultArray.push({
+                certificationName: item.certificationName.toString().trim()
+              });
+            });
+            
+        } else if (field === 'companyWorkedAt') {
+          currentArray
+            .filter(item => item && typeof item === 'object' && item.companyName && item.companyName.trim())
+            .forEach(item => {
+              resultArray.push({
+                companyName: item.companyName.toString().trim()
+              });
+            });
+            
+        } else if (field === 'workedAs') {
+          currentArray
+            .filter(item => item && typeof item === 'object' && item.jobTitle && item.jobTitle.trim())
+            .forEach(item => {
+              resultArray.push({
+                jobTitle: item.jobTitle.toString().trim()
+              });
+            });
+        }
+        
+        allValues[field] = resultArray;
+        console.log(`Final ${field} for API (${resultArray.length} items):`, allValues[field]);
+      });
       
-      console.log('Sending transformed changes to API:', transformedValues);
-      console.log('JSON representation:', JSON.stringify(transformedValues, null, 2));
+      console.log('Sending ENTIRE profile to API:', allValues);
+      console.log('JSON representation:', JSON.stringify(allValues, null, 2));
       
-      const response = await updateSeekerProfile(transformedValues);
+      const response = await updateSeekerProfile(allValues);
       console.log('API Response:', response);
       
       if (response.error) {
@@ -464,7 +462,7 @@ export default function Settings() {
         toast.error(`Failed to update profile: ${response.error}`);
       } else {
         console.log('Update successful, response:', response);
-        toast.success('Profile updated successfully!');
+        toast.success('Entire profile saved successfully!');
         
         // Re-fetch profile data since update only returns success message
         try {
@@ -1083,7 +1081,7 @@ export default function Settings() {
                 }}
                 className="px-6 py-3 bg-light-primary-500 dark:bg-dark-primary-500 text-white rounded-lg hover:bg-light-primary-600 dark:hover:bg-dark-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-light-primary-500 dark:focus:ring-dark-primary-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Saving...' : 'Save Changes'} {!isValid && ' (Invalid)'}
+                {isSubmitting ? 'Saving Entire Profile...' : 'Save Profile'}
               </button>
             </div>
                      </Form>
