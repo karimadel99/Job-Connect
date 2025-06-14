@@ -76,7 +76,7 @@ const LoginForm = () => {
   return (
     <div className="flex min-h-screen">
       {/* Left Side: Form */}
-      <div className="w-full md:w-1/2 p-6 flex flex-col justify-center bg-white dark:bg-[#121212]">
+      <div className="w-full md:w-2/3 p-6 flex flex-col justify-center bg-white dark:bg-[#121212]">
         <form
           onSubmit={formik.handleSubmit}
           className="bg-white dark:bg-[#121212] p-6 w-full max-w-md mx-auto"
@@ -132,7 +132,7 @@ const LoginForm = () => {
       </div>
 
       {/* Right Side: Placeholder for Background Image */}
-      <div className="hidden md:block md:w-1/2">
+      <div className="hidden bg-light-background-secondary dark:bg-[#121212] md:block md:w-1/3">
         <img
           src="/assets/images/Search-rafiki.svg"
           alt="Employer Registration Illustration"
