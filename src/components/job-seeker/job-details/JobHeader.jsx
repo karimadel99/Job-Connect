@@ -1,12 +1,12 @@
 import React from "react";
 import { HiUsers, HiCalendar, HiExclamation } from "react-icons/hi";
 
-const JobHeader = ({ job, setShowModal }) => {
+const JobHeader = ({ job, setShowModal, hasAlreadyApplied = false }) => {
   // Format job type
   const jobType = job.jobType ? job.jobType.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()) : "-";
   
   // Check if job is expired
-  const isExpired = job.daysRemaining === 0 || job.isExpired;
+  const isExpired = job?.isExpired || job?.daysRemaining === 0;
   
   return (
     <div className={`flex flex-col p-6 bg-gradient-to-r ${isExpired ? 'from-gray-600 to-gray-500 dark:from-gray-700 dark:to-gray-600' : 'from-light-primary-900 to-light-primary-700 dark:from-dark-primary-800 dark:to-dark-primary-600'} rounded-lg shadow-lg relative`}>
@@ -51,6 +51,13 @@ const JobHeader = ({ job, setShowModal }) => {
               className="px-8 py-3 bg-gray-500/50 text-gray-300 rounded-lg shadow-lg cursor-not-allowed font-bold text-lg tracking-wide border border-gray-400/30"
             >
               Job Expired
+            </button>
+          ) : hasAlreadyApplied ? (
+            <button
+              disabled
+              className="px-8 py-3 bg-green-500/50 text-green-200 rounded-lg shadow-lg cursor-not-allowed font-bold text-lg tracking-wide border border-green-400/30"
+            >
+              Already Applied
             </button>
           ) : (
             <button

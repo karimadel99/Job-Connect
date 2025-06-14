@@ -11,6 +11,7 @@ import NotFoundState from '../../components/job-seeker/job-details/NotFoundState
 //import jobsData from '../../data/jobsData.json';
 import Loader from '../../components/Loader';
 import { getJobById, getAllJobs, getResumes, applyForJobByResumeId, getRecommendedJobs, getAppliedJobs, getSavedJobs, getSeekerProfile } from '../../api/jobSeekerApi';
+import { toast } from 'react-hot-toast';
 
 const JobDetails = () => {
   const { id } = useParams();
@@ -29,6 +30,22 @@ const JobDetails = () => {
   const [recommendedError, setRecommendedError] = useState('');
   const [showRecommendationMsg, setShowRecommendationMsg] = useState(false);
   const [seekerId, setSeekerId] = useState(null);
+  const [appliedJobs, setAppliedJobs] = useState([]);
+  const [hasAlreadyApplied, setHasAlreadyApplied] = useState(false);
+
+  // Debug function to check application data
+  const debugApplicationData = () => {
+    console.log('=== DEBUG APPLICATION DATA ===');
+    console.log('Job ID:', job?.id);
+    console.log('Selected Resume:', selectedResume);
+    console.log('Available Resumes:', resumes);
+    console.log('Cover Letter Length:', coverLetter?.length || 0);
+    console.log('Resumes Loading:', resumesLoading);
+    console.log('Form Submitting:', submitting);
+    console.log('Already Applied:', hasAlreadyApplied);
+    console.log('Applied Jobs:', appliedJobs);
+    console.log('================================');
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -134,16 +151,96 @@ const JobDetails = () => {
     fetchRecommendations();
   }, [id]);
 
+  // Check if user has already applied for this job
+  useEffect(() => {
+    const checkIfAlreadyApplied = async () => {
+      try {
+        const response = await getAppliedJobs();
+        if (response.data && Array.isArray(response.data)) {
+          setAppliedJobs(response.data);
+          const hasApplied = response.data.some(appliedJob => String(appliedJob.id) === String(id));
+          setHasAlreadyApplied(hasApplied);
+          console.log('Already applied check:', {
+            jobId: id,
+            appliedJobIds: response.data.map(j => j.id),
+            hasApplied
+          });
+        }
+      } catch (error) {
+        console.error('Error checking applied jobs:', error);
+      }
+    };
+    
+    if (id) {
+      checkIfAlreadyApplied();
+    }
+  }, [id]);
+
   const handleApplySubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     
+    // Check if already applied
+    if (hasAlreadyApplied) {
+      alert('You have already applied for this job.');
+      setSubmitting(false);
+      return;
+    }
+    
+    // Validation
+    if (!selectedResume) {
+      alert('Please select a resume to continue with your application.');
+      setSubmitting(false);
+      return;
+    }
+    
+    if (!coverLetter.trim()) {
+      alert('Please write a cover letter to continue with your application.');
+      setSubmitting(false);
+      return;
+    }
+    
     try {
+      console.log('Applying for job:', {
+        jobId: job.id,
+        resumeId: selectedResume,
+        coverLetterLength: coverLetter.length
+      });
+      
       const response = await applyForJobByResumeId(job.id, selectedResume, coverLetter);
+      
+      console.log('Application response:', response);
+      
       if (response.error) {
-        alert(`Failed to apply: ${response.error}`);
-      } else {
-        alert('Application submitted successfully!');
+        console.error('Application failed:', response.error);
+        
+        // Handle specific database constraint error
+        if (response.isDbConstraintError || response.error.includes('entity changes') || response.error.includes('constraint')) {
+          // The application might have been saved despite the error, so refresh the applied jobs
+          try {
+            const appliedJobsResponse = await getAppliedJobs();
+                         if (appliedJobsResponse.data && Array.isArray(appliedJobsResponse.data)) {
+               const hasApplied = appliedJobsResponse.data.some(appliedJob => String(appliedJob.id) === String(job.id));
+               if (hasApplied) {
+                 toast.success('Application submitted successfully!');
+                 setHasAlreadyApplied(true);
+                 setShowModal(false);
+                 setSelectedResume('');
+                 setCoverLetter('');
+                 return;
+               }
+             }
+          } catch (checkError) {
+            console.error('Error checking if application was saved:', checkError);
+          }
+          
+          alert(`Database error occurred: ${response.error}. Please try again or contact support if the issue persists.`);
+        } else {
+          alert(`Failed to apply: ${response.error}`);
+        }
+              } else {
+        toast.success('Application submitted successfully!');
+        setHasAlreadyApplied(true);
         setShowModal(false);
         setSelectedResume('');
         setCoverLetter('');
@@ -162,7 +259,7 @@ const JobDetails = () => {
   return (
     <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 min-h-screen bg-light-background-tertiary dark:bg-dark-background-primary">
       <div className="bg-light-background-primary dark:bg-dark-background-secondary rounded-lg shadow-sm p-6 mb-8 border border-light-neutral-200 dark:border-dark-neutral-700">
-        <JobHeader job={job} setShowModal={setShowModal} />
+        <JobHeader job={job} setShowModal={setShowModal} hasAlreadyApplied={hasAlreadyApplied} />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
         <div className="lg:col-span-2 flex flex-col gap-6">

@@ -217,16 +217,54 @@ export const deleteResume = async (resumeId) => {
 
 export const applyForJobByResumeId = async (jobId, resumeId, coverLetter) => {
   try {
+    console.log('API: Applying for job with params:', {
+      jobId,
+      resumeId,
+      coverLetterLength: coverLetter?.length || 0
+    });
+    
+    // Validate inputs
+    if (!jobId || !resumeId) {
+      throw new Error('Missing required parameters: jobId and resumeId are required');
+    }
+    
+    // Ensure coverLetter is a string (handle null/undefined)
+    const safeCoverLetter = coverLetter || '';
+    
+    const endpoint = `/api/JobSeeker/ApplyForJobByResumeId/${jobId}/${resumeId}?CoverLetter=${encodeURIComponent(safeCoverLetter)}`;
+    console.log('API: Request endpoint:', endpoint);
+    
     const response = await apiClient.post(
-      `/api/JobSeeker/ApplyForJobByResumeId/${jobId}/${resumeId}?coverLetter=${encodeURIComponent(coverLetter)}`,
+      endpoint,
       null,
       {
         headers: { "Content-Type": "application/json" },
       }
     );
+    
+    console.log('API: Application successful:', response.data);
     return response.data;
   } catch (error) {
-    return { error: error.response?.data?.message || "Failed to apply for job" };
+    console.error('API: Application error details:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      url: error.config?.url
+    });
+    
+    // Check if this is a database constraint error
+    const errorMessage = error.response?.data?.message || error.response?.data || error.message || "Failed to apply for job";
+    const isDbConstraintError = errorMessage.includes('entity changes') || 
+                               errorMessage.includes('constraint') || 
+                               errorMessage.includes('duplicate') ||
+                               (error.response?.status === 400 && errorMessage.includes('error occurred while saving'));
+    
+    return { 
+      error: errorMessage,
+      isDbConstraintError: isDbConstraintError,
+      status: error.response?.status
+    };
   }
 };
 
